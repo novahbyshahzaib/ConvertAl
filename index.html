@@ -447,8 +447,15 @@
 // CONSTANTS
 // ============================================================
 
+// ---- Formatting constants ----
+const MAX_SIGNIFICANT_FIGURES  = 10; // toPrecision limit to suppress float noise
+const MAX_DECIMAL_PLACES       = 8;  // max digits after the decimal point in output
+const MAX_HISTORY_ENTRIES      = 20; // max entries kept in the history log
+const HISTORY_SAVE_DEBOUNCE_MS = 600; // ms to wait before writing a history entry
+
 // Static approximate rates vs USD — for demonstration only.
-// NOT live rates. Do not use for financial transactions.
+// IMPORTANT: These are hardcoded static rates from March 2026 and will become
+// outdated. Do NOT use for actual financial transactions or calculations.
 const CURRENCY_RATES = {
   USD:1, EUR:0.92, GBP:0.79, JPY:149.5, INR:83.1, AUD:1.53, CAD:1.36,
   CHF:0.88, CNY:7.24, AED:3.67, SAR:3.75, SGD:1.34, NZD:1.63, MXN:17.15,
@@ -852,9 +859,9 @@ function convertCurrency(v, from, to) {
 function formatResult(n) {
   if (n === null || n === undefined || isNaN(n)) return null;
   if (!isFinite(n)) return n > 0 ? '∞' : '-∞';
-  // Use toPrecision(10) to limit floating point noise to 10 significant figures,
-  // then trim trailing zeros and cap the decimal portion to 8 places.
-  const s = parseFloat(n.toPrecision(10)).toString();
+  // Limit to MAX_SIGNIFICANT_FIGURES to suppress floating-point noise,
+  // then cap the decimal portion to MAX_DECIMAL_PLACES.
+  const s = parseFloat(n.toPrecision(MAX_SIGNIFICANT_FIGURES)).toString();
   // Split into integer and decimal parts
   const parts = s.split('.');
   let intPart = parts[0];
@@ -866,8 +873,8 @@ function formatResult(n) {
   if (neg) intPart = '-' + intPart;
   // Trim trailing zeros from decimal
   decPart = decPart.replace(/0+$/, '');
-  // Limit to 8 decimal places (simple string truncation)
-  if (decPart.length > 8) decPart = decPart.slice(0, 8).replace(/0+$/, '');
+  // Cap to MAX_DECIMAL_PLACES then trim trailing zeros again
+  if (decPart.length > MAX_DECIMAL_PLACES) decPart = decPart.slice(0, MAX_DECIMAL_PLACES).replace(/0+$/, '');
   return decPart ? intPart + '.' + decPart : intPart;
 }
 
@@ -958,7 +965,7 @@ function saveState() {
     localStorage.setItem('ucp_dataMode',  state.dataMode);
     localStorage.setItem('ucp_ingredient',state.cookingIngredient);
     localStorage.setItem('ucp_favorites', JSON.stringify(state.favorites));
-    localStorage.setItem('ucp_history',   JSON.stringify(state.history.slice(0, 20)));
+    localStorage.setItem('ucp_history',   JSON.stringify(state.history.slice(0, MAX_HISTORY_ENTRIES)));
   } catch(e) {}
 }
 
@@ -1009,7 +1016,7 @@ function addHistory(catId, fromUnit, toUnit, fromVal, result) {
     !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit && h.fromVal === fromVal)
   );
   state.history.unshift(entry);
-  if (state.history.length > 20) state.history.pop();
+  if (state.history.length > MAX_HISTORY_ENTRIES) state.history.pop();
 }
 
 function timeAgo(ts) {
@@ -1099,7 +1106,7 @@ function buildConverterHTML(cat) {
 
   let extras = '';
   if (cat.type === 'cooking') extras = buildCookingExtras();
-  if (cat.type === 'currency') extras = `<div class="currency-disclaimer">⚠️ Rates last updated: March 2026 (approximate). Not for financial decisions.</div>`;
+  if (cat.type === 'currency') extras = `<div class="currency-disclaimer">⚠️ <strong>Static demonstration rates only.</strong> Rates last updated: March 2026 (approximate). These values are outdated and must NOT be used for actual financial transactions or currency conversions.</div>`;
 
   let dataModeBtn = '';
   if (cat.type === 'data') {
@@ -1309,7 +1316,7 @@ function updateResult() {
     _debounceTimer = setTimeout(() => {
       addHistory(cat.id, state.fromUnit, state.toUnit, state.fromValue, resultStr);
       saveState();
-    }, 600);
+    }, HISTORY_SAVE_DEBOUNCE_MS);
   }
 }
 
