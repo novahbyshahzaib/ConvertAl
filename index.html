@@ -7,7 +7,7 @@
   <meta name="description" content="Unit Converter Pro - Convert between 15+ categories">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Unit%20Converter%20Pro%22%2C%22short_name%22%3A%22UnitConv%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f0f1a%22%2C%22theme_color%22%3A%22%236366f1%22%7D">
   <title>Unit Converter Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -779,9 +779,15 @@ function convertTemperature(v, from, to) {
 }
 
 function convertFuel(v, from, to) {
-  if (v === 0) return 0;
   if (from === to) return v;
-  // convert from -> mpg as base
+  // L/100km = 0 means infinite efficiency — result is also 0 or ∞ depending on target
+  if (v === 0) {
+    // mpg or km/L of 0 → L/100km is ∞; L/100km of 0 → mpg/kmL is ∞
+    if (from === 'L100km') return Infinity;
+    if (to === 'L100km') return Infinity;
+    return 0;
+  }
+  // Convert from -> mpg as common base
   let mpg;
   switch (from) {
     case 'mpg':    mpg = v; break;
@@ -842,7 +848,8 @@ function convertCurrency(v, from, to) {
 function formatResult(n) {
   if (n === null || n === undefined || isNaN(n)) return null;
   if (!isFinite(n)) return n > 0 ? '∞' : '-∞';
-  // Use toPrecision(10) to limit floating point noise, then trim
+  // Use toPrecision(10) to limit floating point noise to 10 significant figures,
+  // then trim trailing zeros and cap the decimal portion to 8 places.
   const s = parseFloat(n.toPrecision(10)).toString();
   // Split into integer and decimal parts
   const parts = s.split('.');
