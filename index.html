@@ -447,6 +447,8 @@
 // CONSTANTS
 // ============================================================
 
+// Static approximate rates vs USD — for demonstration only.
+// NOT live rates. Do not use for financial transactions.
 const CURRENCY_RATES = {
   USD:1, EUR:0.92, GBP:0.79, JPY:149.5, INR:83.1, AUD:1.53, CAD:1.36,
   CHF:0.88, CNY:7.24, AED:3.67, SAR:3.75, SGD:1.34, NZD:1.63, MXN:17.15,
@@ -782,9 +784,11 @@ function convertFuel(v, from, to) {
   if (from === to) return v;
   // L/100km = 0 means infinite efficiency — result is also 0 or ∞ depending on target
   if (v === 0) {
-    // mpg or km/L of 0 → L/100km is ∞; L/100km of 0 → mpg/kmL is ∞
-    if (from === 'L100km') return Infinity;
-    if (to === 'L100km') return Infinity;
+    // Zero fuel economy:
+    //   L/100km = 0 means ∞ efficiency → mpg / km/L would be Infinity
+    //   mpg = 0 or km/L = 0 means 0 efficiency → L/100km would be Infinity
+    if (from === 'L100km') return Infinity; // 0 L/100km → ∞ mpg / km/L
+    if (to   === 'L100km') return Infinity; // 0 mpg / km/L → ∞ L/100km
     return 0;
   }
   // Convert from -> mpg as common base
@@ -1000,9 +1004,9 @@ function addHistory(catId, fromUnit, toUnit, fromVal, result) {
     fromLabel, toLabel, result,
     time: Date.now()
   };
-  // Remove duplicate
+  // Remove duplicate entry with identical category, units AND value
   state.history = state.history.filter(h =>
-    !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit)
+    !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit && h.value === value)
   );
   state.history.unshift(entry);
   if (state.history.length > 20) state.history.pop();
