@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f0f1a" id="theme-color-meta">
+  <meta name="description" content="Unit Converter Pro - Convert between 15+ categories">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Unit%20Converter%20Pro%22%2C%22short_name%22%3A%22UnitConv%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f0f1a%22%2C%22theme_color%22%3A%22%236366f1%22%7D">
+  <title>Unit Converter Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ===== CSS VARIABLES (Light Theme Default) ===== */
+    :root {
+      --bg: #f0f4ff;
+      --surface: rgba(255,255,255,0.8);
+      --surface-hover: rgba(255,255,255,0.95);
+      --border: rgba(0,0,0,0.1);
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 8px 32px rgba(0,0,0,0.1);
+      --gradient: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 50%, #e8eeff 100%);
+      --tr: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dark {
+      --bg: #0f0f1a;
+      --surface: rgba(255,255,255,0.05);
+      --surface-hover: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.1);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --glass: rgba(255,255,255,0.03);
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --gradient: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gradient);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.3s ease;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px;
+      background: var(--glass);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    }
+    .logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .logo-icon { font-size: 24px; }
+    .logo-text {
+      font-weight: 700; font-size: 18px; white-space: nowrap;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .search-container { flex: 1; position: relative; max-width: 420px; }
+    .search-input {
+      width: 100%; padding: 8px 16px 8px 38px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+      transition: var(--tr);
+    }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none; font-size: 15px;
+    }
+    .search-dropdown {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: var(--shadow); z-index: 200;
+      display: none; max-height: 280px; overflow-y: auto;
+    }
+    .search-dropdown.visible { display: block; animation: fadeSlideDown 0.2s ease; }
+    .search-result {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; cursor: pointer; transition: background 0.15s; font-size: 14px;
+    }
+    .search-result:hover { background: var(--surface-hover); }
+    .search-result-icon { font-size: 16px; width: 24px; text-align: center; }
+    .search-result-text { flex: 1; color: var(--text); font-weight: 500; }
+    .search-result-sub { font-size: 12px; color: var(--text-muted); }
+    .theme-toggle {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--tr); flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--surface-hover); transform: rotate(20deg); }
+
+    /* ===== TAB BAR ===== */
+    .tab-bar-wrapper {
+      position: sticky; top: 65px; z-index: 90;
+      background: var(--glass); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-bar {
+      display: flex; gap: 6px; padding: 10px 16px;
+      overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 14px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap;
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      transition: var(--tr); flex-shrink: 0;
+    }
+    .tab:hover { background: var(--surface-hover); color: var(--text); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .tab-icon { font-size: 13px; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content { max-width: 700px; margin: 0 auto; padding: 24px 16px 120px; }
+
+    /* ===== CONVERTER CARD ===== */
+    .converter-card {
+      background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 24px;
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+      animation: fadeIn 0.3s ease;
+    }
+    .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .card-icon { font-size: 24px; }
+    .card-title { font-size: 18px; font-weight: 600; flex: 1; }
+    .toggle-chip {
+      padding: 4px 12px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); font-size: 12px; font-family: inherit;
+      cursor: pointer; transition: var(--tr); font-weight: 500;
+    }
+    .toggle-chip:hover { background: var(--surface-hover); color: var(--text); }
+    .toggle-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* FROM/TO sections */
+    .conversion-area { display: flex; flex-direction: column; gap: 4px; }
+    .unit-section {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; transition: var(--tr);
+    }
+    .unit-section:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .unit-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px;
+    }
+    .unit-row { display: flex; gap: 10px; align-items: center; }
+    .unit-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: inherit; font-size: 28px; font-weight: 600;
+      color: var(--text); width: 100%; min-width: 0;
+    }
+    .unit-input::placeholder { color: var(--text-muted); opacity: 0.5; }
+    .unit-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: inherit;
+      font-size: 14px; font-weight: 500; padding: 6px 10px;
+      cursor: pointer; outline: none; transition: var(--tr);
+      max-width: 150px; flex-shrink: 0;
+    }
+    .unit-select:focus { border-color: var(--accent); }
+    .result-display {
+      flex: 1; font-size: 28px; font-weight: 600; color: var(--text);
+      word-break: break-all; min-width: 0; padding: 2px 0;
+    }
+    .result-display.invalid { font-size: 16px; color: #ef4444; font-weight: 500; }
+    .result-display.empty { color: var(--text-muted); opacity: 0.5; }
+
+    /* Swap button */
+    .swap-area { display: flex; justify-content: center; align-items: center; padding: 6px 0; }
+    .swap-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 2px solid var(--accent); background: var(--bg);
+      color: var(--accent); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 10px rgba(99,102,241,0.3);
+    }
+    .swap-btn:hover { background: var(--accent); color: white; }
+    .swap-btn.spinning { animation: spinOnce 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    /* Formula display */
+    .formula-display {
+      margin-top: 14px; padding: 10px 14px;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 13px; color: var(--text-muted);
+      text-align: center; min-height: 38px;
+    }
+    .formula-display .formula-highlight { color: var(--accent); font-weight: 500; }
+
+    /* Action buttons */
+    .action-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .action-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); font-family: inherit; font-size: 13px;
+      font-weight: 500; cursor: pointer; transition: var(--tr);
+    }
+    .action-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .action-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .copy-btn.copied { background: #10b981; border-color: #10b981; color: white; }
+    .star-btn.starred { color: #f59e0b; border-color: #f59e0b; background: rgba(245,158,11,0.1); }
+
+    /* ===== COOKING EXTRAS ===== */
+    .cooking-extras {
+      margin-top: 16px; padding: 16px;
+      background: var(--glass); border: 1px solid var(--border); border-radius: 14px;
+    }
+    .extras-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .ingredient-select {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: inherit;
+      font-size: 14px; padding: 8px 12px; cursor: pointer; outline: none; margin-bottom: 12px;
+    }
+    .fraction-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .fraction-chip {
+      padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); font-size: 13px; font-family: inherit;
+      cursor: pointer; transition: var(--tr);
+    }
+    .fraction-chip:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* ===== CURRENCY ===== */
+    .currency-disclaimer {
+      margin-top: 12px; padding: 10px 14px;
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 10px; font-size: 12px; color: #f59e0b; text-align: center;
+    }
+
+    /* ===== MULTI-CONVERT ===== */
+    .multi-convert-section {
+      margin-top: 16px; background: var(--surface);
+      backdrop-filter: blur(20px); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; animation: fadeSlideDown 0.3s ease;
+    }
+    .multi-convert-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-weight: 600; font-size: 14px; color: var(--text-muted);
+    }
+    .multi-table { width: 100%; border-collapse: collapse; }
+    .multi-table th {
+      padding: 10px 16px; text-align: left; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-muted); border-bottom: 1px solid var(--border);
+      background: var(--glass);
+    }
+    .multi-table td { padding: 10px 16px; font-size: 14px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .multi-table tr:last-child td { border-bottom: none; }
+    .multi-table tr:hover td { background: var(--surface-hover); }
+    .multi-table td:first-child { font-weight: 600; color: var(--accent); width: 80px; }
+    .multi-table td.unit-name-col { color: var(--text-muted); font-size: 12px; }
+    .multi-table td.val-col { font-variant-numeric: tabular-nums; }
+    .multi-table tr.active-row td { background: rgba(99,102,241,0.08); }
+    .tbl-copy {
+      padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); font-size: 11px;
+      cursor: pointer; transition: var(--tr); font-family: inherit;
+    }
+    .tbl-copy:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .tbl-copy.copied { background: #10b981; color: white; border-color: #10b981; }
+
+    /* ===== HISTORY PANEL ===== */
+    .history-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      background: var(--surface); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      border-top: 1px solid var(--border); border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.3);
+      transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 60vh; display: flex; flex-direction: column;
+    }
+    .history-panel.open { transform: translateY(0); }
+    .history-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .history-panel-title { font-size: 16px; font-weight: 600; }
+    .history-panel-actions { display: flex; gap: 8px; }
+    .h-clear-btn, .h-close-btn {
+      padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); font-size: 13px;
+      font-family: inherit; cursor: pointer; transition: var(--tr);
+    }
+    .h-clear-btn:hover { background: rgba(239,68,68,0.15); color: #ef4444; border-color: #ef4444; }
+    .h-close-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .history-list { overflow-y: auto; flex: 1; padding: 8px 0; }
+    .history-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; cursor: pointer; transition: background 0.15s; font-size: 14px;
+    }
+    .history-item:hover { background: var(--surface-hover); }
+    .h-item-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+    .h-item-text { flex: 1; color: var(--text); }
+    .h-item-from { color: var(--text-muted); }
+    .h-item-arrow { color: var(--accent); margin: 0 4px; }
+    .h-item-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .history-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+    /* ===== HISTORY FAB ===== */
+    .history-fab {
+      position: fixed; bottom: 24px; right: 24px; z-index: 250;
+      display: flex; align-items: center; gap: 6px; padding: 10px 16px;
+      border-radius: 24px; border: 1px solid var(--border);
+      background: var(--surface); backdrop-filter: blur(20px);
+      color: var(--text-muted); font-family: inherit; font-size: 13px;
+      font-weight: 500; cursor: pointer; box-shadow: var(--shadow); transition: var(--tr);
+    }
+    .history-fab:hover { background: var(--surface-hover); color: var(--text); }
+
+    /* ===== OVERLAY ===== */
+    .overlay { position: fixed; inset: 0; z-index: 280; background: rgba(0,0,0,0.5); display: none; }
+    .overlay.visible { display: block; }
+
+    /* ===== FAVORITES ===== */
+    .fav-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .fav-empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .fav-empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .fav-empty-hint { font-size: 14px; opacity: 0.7; }
+    .favorites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .fav-card {
+      background: var(--surface); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+      cursor: pointer; transition: var(--tr); box-shadow: var(--shadow);
+    }
+    .fav-card:hover { background: var(--surface-hover); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
+    .fav-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .fav-card-icon { font-size: 18px; }
+    .fav-card-cat { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .fav-delete {
+      margin-left: auto; width: 24px; height: 24px; border-radius: 50%;
+      border: none; background: transparent; color: var(--text-muted);
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: var(--tr);
+    }
+    .fav-delete:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .fav-units { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
+    .fav-arrow { color: var(--accent); }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(180deg); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .header { padding: 10px 12px; }
+      .logo-text { display: none; }
+      .search-container { max-width: none; }
+      .main-content { padding: 16px 12px 100px; }
+      .converter-card { padding: 16px; }
+      .unit-input, .result-display { font-size: 22px; }
+      .tab-bar { padding: 8px 12px; }
+      .favorites-grid { grid-template-columns: 1fr; }
+      .history-fab { bottom: 16px; right: 16px; }
+      .unit-select { max-width: 120px; }
+    }
+    @media (max-width: 400px) {
+      .unit-input, .result-display { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app" class="dark">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Unit Converter Pro</span>
+    </div>
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" class="search-input"
+        placeholder="Search categories &amp; units..." autocomplete="off" spellcheck="false">
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar-wrapper">
+    <div class="tab-bar" id="tab-bar" role="tablist" aria-label="Converter categories"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content" role="main"></main>
+
+  <!-- HISTORY PANEL -->
+  <div class="history-panel" id="history-panel" role="dialog" aria-label="Conversion History" aria-hidden="true">
+    <div class="history-panel-header">
+      <h3 class="history-panel-title">🕐 Conversion History</h3>
+      <div class="history-panel-actions">
+        <button class="h-clear-btn" id="h-clear">Clear All</button>
+        <button class="h-close-btn" id="h-close">✕</button>
+      </div>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- HISTORY FAB -->
+  <button class="history-fab" id="history-fab" title="View conversion history" aria-label="Open history">
+    <span>🕐</span><span>History</span>
+  </button>
+
+</div>
+<script>
+(function() {
+'use strict';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+
+// ---- Formatting constants ----
+const MAX_SIGNIFICANT_FIGURES  = 10; // toPrecision limit to suppress float noise
+const MAX_DECIMAL_PLACES       = 8;  // max digits after the decimal point in output
+const MAX_HISTORY_ENTRIES      = 20; // max entries kept in the history log
+const HISTORY_SAVE_DEBOUNCE_MS = 600; // ms to wait before writing a history entry
+
+// Static approximate rates vs USD — for demonstration only.
+// IMPORTANT: These are hardcoded static rates from March 2026 and will become
+// outdated. Do NOT use for actual financial transactions or calculations.
+const CURRENCY_RATES = {
+  USD:1, EUR:0.92, GBP:0.79, JPY:149.5, INR:83.1, AUD:1.53, CAD:1.36,
+  CHF:0.88, CNY:7.24, AED:3.67, SAR:3.75, SGD:1.34, NZD:1.63, MXN:17.15,
+  BRL:4.97, KRW:1325, SEK:10.42, NOK:10.55, DKK:6.88, HKD:7.82
+};
+const CURRENCY_FLAGS = {
+  USD:'🇺🇸', EUR:'🇪🇺', GBP:'🇬🇧', JPY:'🇯🇵', INR:'🇮🇳', AUD:'🇦🇺', CAD:'🇨🇦',
+  CHF:'🇨🇭', CNY:'🇨🇳', AED:'🇦🇪', SAR:'🇸🇦', SGD:'🇸🇬', NZD:'🇳🇿', MXN:'🇲🇽',
+  BRL:'🇧🇷', KRW:'🇰🇷', SEK:'🇸🇪', NOK:'🇳🇴', DKK:'🇩🇰', HKD:'🇭🇰'
+};
+const CURRENCY_NAMES = {
+  USD:'US Dollar', EUR:'Euro', GBP:'British Pound', JPY:'Japanese Yen',
+  INR:'Indian Rupee', AUD:'Australian Dollar', CAD:'Canadian Dollar',
+  CHF:'Swiss Franc', CNY:'Chinese Yuan', AED:'UAE Dirham', SAR:'Saudi Riyal',
+  SGD:'Singapore Dollar', NZD:'New Zealand Dollar', MXN:'Mexican Peso',
+  BRL:'Brazilian Real', KRW:'South Korean Won', SEK:'Swedish Krona',
+  NOK:'Norwegian Krone', DKK:'Danish Krone', HKD:'Hong Kong Dollar'
+};
+const COOKING_DENSITIES = { flour:0.593, water:1.0, butter:0.911, sugar:0.845, rice:0.753, milk:1.03, generic:1.0 };
+const COOKING_INGREDIENT_NAMES = { flour:'Flour', water:'Water', butter:'Butter', sugar:'Sugar', rice:'Rice', milk:'Milk', generic:'Generic (water)' };
+
+// Volume units in ml for cooking (keys match unit IDs)
+const COOK_VOL = { tsp:4.92892, tbsp:14.7868, floz:29.5735, cup:236.588, ml:1 };
+// Weight units in grams for cooking
+const COOK_WT  = { g:1, oz:28.3495 };
+
+// ============================================================
+// CATEGORY DEFINITIONS
+// ============================================================
+
+const CATEGORIES = [
+  {
+    id: 'length', name: 'Length', icon: '📏',
+    units: [
+      {id:'mm',  label:'mm',  name:'Millimeters'},
+      {id:'cm',  label:'cm',  name:'Centimeters'},
+      {id:'m',   label:'m',   name:'Meters'},
+      {id:'km',  label:'km',  name:'Kilometers'},
+      {id:'in',  label:'in',  name:'Inches'},
+      {id:'ft',  label:'ft',  name:'Feet'},
+      {id:'yd',  label:'yd',  name:'Yards'},
+      {id:'mi',  label:'mi',  name:'Miles'},
+      {id:'nmi', label:'nmi', name:'Nautical Miles'},
+    ],
+    factors: {mm:0.001, cm:0.01, m:1, km:1000, 'in':0.0254, ft:0.3048, yd:0.9144, mi:1609.344, nmi:1852},
+    type: 'linear', defaultFrom:'m', defaultTo:'km'
+  },
+  {
+    id: 'weight', name: 'Weight & Mass', icon: '⚖️',
+    units: [
+      {id:'mg', label:'mg', name:'Milligrams'},
+      {id:'g',  label:'g',  name:'Grams'},
+      {id:'kg', label:'kg', name:'Kilograms'},
+      {id:'t',  label:'t',  name:'Metric Tons'},
+      {id:'oz', label:'oz', name:'Ounces'},
+      {id:'lb', label:'lb', name:'Pounds'},
+      {id:'st', label:'st', name:'Stone'},
+    ],
+    factors: {mg:0.001, g:1, kg:1000, t:1000000, oz:28.3495, lb:453.592, st:6350.29},
+    type: 'linear', defaultFrom:'kg', defaultTo:'lb'
+  },
+  {
+    id: 'temperature', name: 'Temperature', icon: '🌡️',
+    units: [
+      {id:'C', label:'°C', name:'Celsius'},
+      {id:'F', label:'°F', name:'Fahrenheit'},
+      {id:'K', label:'K',  name:'Kelvin'},
+      {id:'R', label:'°R', name:'Rankine'},
+    ],
+    type: 'special', defaultFrom:'C', defaultTo:'F'
+  },
+  {
+    id: 'area', name: 'Area', icon: '🔲',
+    units: [
+      {id:'mm2',  label:'mm²',  name:'Sq. Millimeters'},
+      {id:'cm2',  label:'cm²',  name:'Sq. Centimeters'},
+      {id:'m2',   label:'m²',   name:'Sq. Meters'},
+      {id:'km2',  label:'km²',  name:'Sq. Kilometers'},
+      {id:'in2',  label:'in²',  name:'Sq. Inches'},
+      {id:'ft2',  label:'ft²',  name:'Sq. Feet'},
+      {id:'yd2',  label:'yd²',  name:'Sq. Yards'},
+      {id:'acre', label:'acre', name:'Acres'},
+      {id:'ha',   label:'ha',   name:'Hectares'},
+    ],
+    factors: {mm2:1e-6, cm2:1e-4, m2:1, km2:1e6, in2:6.4516e-4, ft2:0.092903, yd2:0.836127, acre:4046.86, ha:10000},
+    type: 'linear', defaultFrom:'m2', defaultTo:'ft2'
+  },
+  {
+    id: 'volume', name: 'Volume', icon: '🧪',
+    units: [
+      {id:'ml',    label:'ml',    name:'Milliliters'},
+      {id:'cl',    label:'cl',    name:'Centiliters'},
+      {id:'dl',    label:'dl',    name:'Deciliters'},
+      {id:'L',     label:'L',     name:'Liters'},
+      {id:'m3',    label:'m³',    name:'Cubic Meters'},
+      {id:'tsp',   label:'tsp',   name:'Teaspoons'},
+      {id:'tbsp',  label:'tbsp',  name:'Tablespoons'},
+      {id:'floz',  label:'fl oz', name:'Fluid Ounces'},
+      {id:'cup',   label:'cup',   name:'Cups'},
+      {id:'pt',    label:'pt',    name:'Pints'},
+      {id:'qt',    label:'qt',    name:'Quarts'},
+      {id:'gal',   label:'gal',   name:'Gallons'},
+    ],
+    factors: {ml:0.001, cl:0.01, dl:0.1, L:1, m3:1000, tsp:0.00492892, tbsp:0.0147868, floz:0.0295735, cup:0.236588, pt:0.473176, qt:0.946353, gal:3.78541},
+    type: 'linear', defaultFrom:'L', defaultTo:'gal'
+  },
+  {
+    id: 'speed', name: 'Speed', icon: '🚀',
+    units: [
+      {id:'ms',   label:'m/s',  name:'Meters/Second'},
+      {id:'kmh',  label:'km/h', name:'Kilometers/Hour'},
+      {id:'mph',  label:'mph',  name:'Miles/Hour'},
+      {id:'knot', label:'knot', name:'Knots'},
+      {id:'fts',  label:'ft/s', name:'Feet/Second'},
+      {id:'mach', label:'Mach', name:'Mach'},
+    ],
+    factors: {ms:1, kmh:1/3.6, mph:0.44704, knot:0.514444, fts:0.3048, mach:343},
+    type: 'linear', defaultFrom:'kmh', defaultTo:'mph'
+  },
+  {
+    id: 'time', name: 'Time', icon: '⏱️',
+    units: [
+      {id:'ns',    label:'ns',   name:'Nanoseconds'},
+      {id:'us',    label:'µs',   name:'Microseconds'},
+      {id:'ms',    label:'ms',   name:'Milliseconds'},
+      {id:'s',     label:'s',    name:'Seconds'},
+      {id:'min',   label:'min',  name:'Minutes'},
+      {id:'hr',    label:'hr',   name:'Hours'},
+      {id:'day',   label:'day',  name:'Days'},
+      {id:'week',  label:'week', name:'Weeks'},
+      {id:'month', label:'mo',   name:'Months'},
+      {id:'year',  label:'yr',   name:'Years'},
+    ],
+    factors: {ns:1e-9, us:1e-6, ms:0.001, s:1, min:60, hr:3600, day:86400, week:604800, month:2629800, year:31557600},
+    type: 'linear', defaultFrom:'hr', defaultTo:'min'
+  },
+  {
+    id: 'data', name: 'Data & Storage', icon: '💾',
+    unitsSI: [
+      {id:'bit', label:'bit', name:'Bits'},
+      {id:'byte',label:'byte',name:'Bytes'},
+      {id:'KB',  label:'KB',  name:'Kilobytes'},
+      {id:'MB',  label:'MB',  name:'Megabytes'},
+      {id:'GB',  label:'GB',  name:'Gigabytes'},
+      {id:'TB',  label:'TB',  name:'Terabytes'},
+      {id:'PB',  label:'PB',  name:'Petabytes'},
+    ],
+    unitsIEC: [
+      {id:'bit', label:'bit', name:'Bits'},
+      {id:'byte',label:'byte',name:'Bytes'},
+      {id:'KiB', label:'KiB', name:'Kibibytes'},
+      {id:'MiB', label:'MiB', name:'Mebibytes'},
+      {id:'GiB', label:'GiB', name:'Gibibytes'},
+      {id:'TiB', label:'TiB', name:'Tebibytes'},
+      {id:'PiB', label:'PiB', name:'Pebibytes'},
+    ],
+    factorsSI: {bit:1, byte:8, KB:8000, MB:8e6, GB:8e9, TB:8e12, PB:8e15},
+    factorsIEC:{bit:1, byte:8, KiB:8192, MiB:8388608, GiB:8589934592, TiB:8796093022208, PiB:9007199254740992},
+    type: 'data', defaultFrom:'MB', defaultTo:'GB'
+  },
+  {
+    id: 'energy', name: 'Energy', icon: '⚡',
+    units: [
+      {id:'J',   label:'J',   name:'Joules'},
+      {id:'kJ',  label:'kJ',  name:'Kilojoules'},
+      {id:'cal', label:'cal', name:'Calories'},
+      {id:'kcal',label:'kcal',name:'Kilocalories'},
+      {id:'Wh',  label:'Wh',  name:'Watt-hours'},
+      {id:'kWh', label:'kWh', name:'Kilowatt-hours'},
+      {id:'BTU', label:'BTU', name:'BTU'},
+      {id:'eV',  label:'eV',  name:'Electronvolts'},
+    ],
+    factors: {J:1, kJ:1000, cal:4.184, kcal:4184, Wh:3600, kWh:3600000, BTU:1055.06, eV:1.60218e-19},
+    type: 'linear', defaultFrom:'kcal', defaultTo:'kJ'
+  },
+  {
+    id: 'pressure', name: 'Pressure', icon: '🔵',
+    units: [
+      {id:'Pa',   label:'Pa',   name:'Pascals'},
+      {id:'hPa',  label:'hPa',  name:'Hectopascals'},
+      {id:'kPa',  label:'kPa',  name:'Kilopascals'},
+      {id:'MPa',  label:'MPa',  name:'Megapascals'},
+      {id:'bar',  label:'bar',  name:'Bar'},
+      {id:'atm',  label:'atm',  name:'Atmospheres'},
+      {id:'psi',  label:'psi',  name:'PSI'},
+      {id:'mmHg', label:'mmHg', name:'mmHg (Torr)'},
+      {id:'inHg', label:'inHg', name:'inHg'},
+    ],
+    factors: {Pa:1, hPa:100, kPa:1000, MPa:1e6, bar:1e5, atm:101325, psi:6894.76, mmHg:133.322, inHg:3386.39},
+    type: 'linear', defaultFrom:'atm', defaultTo:'psi'
+  },
+  {
+    id: 'cooking', name: 'Cooking', icon: '🍳',
+    units: [
+      {id:'tsp',  label:'tsp',  name:'Teaspoons',     kind:'vol'},
+      {id:'tbsp', label:'tbsp', name:'Tablespoons',   kind:'vol'},
+      {id:'floz', label:'fl oz',name:'Fluid Ounces',  kind:'vol'},
+      {id:'cup',  label:'cup',  name:'Cups',          kind:'vol'},
+      {id:'ml',   label:'ml',   name:'Milliliters',   kind:'vol'},
+      {id:'g',    label:'g',    name:'Grams',         kind:'wt'},
+      {id:'oz',   label:'oz',   name:'Ounces',        kind:'wt'},
+    ],
+    type: 'cooking', defaultFrom:'cup', defaultTo:'ml'
+  },
+  {
+    id: 'currency', name: 'Currency', icon: '💱',
+    units: Object.keys(CURRENCY_RATES).map(k => ({
+      id: k, label: CURRENCY_FLAGS[k] + ' ' + k, name: CURRENCY_NAMES[k]
+    })),
+    type: 'currency', defaultFrom:'USD', defaultTo:'EUR'
+  },
+  {
+    id: 'fuel', name: 'Fuel Economy', icon: '⛽',
+    units: [
+      {id:'mpg',    label:'mpg',     name:'Miles/Gallon'},
+      {id:'kmL',    label:'km/L',    name:'Kilometers/Liter'},
+      {id:'L100km', label:'L/100km', name:'Liters/100km'},
+    ],
+    type: 'fuel', defaultFrom:'mpg', defaultTo:'kmL'
+  },
+  {
+    id: 'angle', name: 'Angle', icon: '📐',
+    units: [
+      {id:'deg',   label:'°',    name:'Degrees'},
+      {id:'rad',   label:'rad',  name:'Radians'},
+      {id:'grad',  label:'grad', name:'Gradians'},
+      {id:'arcmin',label:'\'',   name:'Arcminutes'},
+      {id:'arcsec',label:'"',    name:'Arcseconds'},
+    ],
+    factors: {deg:1, rad:180/Math.PI, grad:0.9, arcmin:1/60, arcsec:1/3600},
+    type: 'linear', defaultFrom:'deg', defaultTo:'rad'
+  },
+  {
+    id: 'frequency', name: 'Frequency', icon: '🔊',
+    units: [
+      {id:'Hz',  label:'Hz',  name:'Hertz'},
+      {id:'kHz', label:'kHz', name:'Kilohertz'},
+      {id:'MHz', label:'MHz', name:'Megahertz'},
+      {id:'GHz', label:'GHz', name:'Gigahertz'},
+      {id:'THz', label:'THz', name:'Terahertz'},
+    ],
+    factors: {Hz:1, kHz:1000, MHz:1e6, GHz:1e9, THz:1e12},
+    type: 'linear', defaultFrom:'MHz', defaultTo:'GHz'
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+
+let state = {
+  theme: 'dark',
+  activeCategory: 'length',
+  fromUnit: 'm',
+  toUnit: 'km',
+  fromValue: '1',
+  multiConvert: false,
+  dataMode: 'SI',
+  cookingIngredient: 'water',
+  historyOpen: false,
+  favorites: [],
+  history: [],
+};
+
+// ============================================================
+// HELPER: get category / units
+// ============================================================
+
+function getCat(id) { return CATEGORIES.find(c => c.id === id); }
+
+function getCatUnits(catId, dataMode) {
+  const cat = getCat(catId);
+  if (!cat) return [];
+  if (cat.type === 'data') return dataMode === 'IEC' ? cat.unitsIEC : cat.unitsSI;
+  if (cat.units) return cat.units;
+  return [];
+}
+
+function getCatFactors(cat, dataMode) {
+  if (!cat) return null;
+  if (cat.type === 'data') return dataMode === 'IEC' ? cat.factorsIEC : cat.factorsSI;
+  return cat.factors || null;
+}
+
+// ============================================================
+// CONVERSION LOGIC
+// ============================================================
+
+function convertValue(catId, fromUnit, toUnit, value, dataMode, ingredient) {
+  if (isNaN(value) || value === null) return null;
+  if (fromUnit === toUnit) return value;
+  const cat = getCat(catId);
+  if (!cat) return null;
+
+  switch (cat.type) {
+    case 'linear':
+    case 'data': {
+      const factors = getCatFactors(cat, dataMode);
+      if (!factors) return null;
+      const ff = factors[fromUnit], tf = factors[toUnit];
+      if (ff == null || tf == null) return null;
+      return value * ff / tf;
+    }
+    case 'temperature': return convertTemperature(value, fromUnit, toUnit);
+    case 'fuel':        return convertFuel(value, fromUnit, toUnit);
+    case 'cooking':     return convertCooking(value, fromUnit, toUnit, ingredient || 'water');
+    case 'currency':    return convertCurrency(value, fromUnit, toUnit);
+    default: return null;
+  }
+}
+
+function convertTemperature(v, from, to) {
+  // First convert to Celsius
+  let c;
+  switch (from) {
+    case 'C': c = v; break;
+    case 'F': c = (v - 32) * 5/9; break;
+    case 'K': c = v - 273.15; break;
+    case 'R': c = (v - 491.67) * 5/9; break;
+    default: return null;
+  }
+  // Celsius to target
+  switch (to) {
+    case 'C': return c;
+    case 'F': return c * 9/5 + 32;
+    case 'K': return c + 273.15;
+    case 'R': return (c + 273.15) * 9/5;
+    default: return null;
+  }
+}
+
+function convertFuel(v, from, to) {
+  if (from === to) return v;
+  // L/100km = 0 means infinite efficiency — result is also 0 or ∞ depending on target
+  if (v === 0) {
+    // Zero fuel economy:
+    //   L/100km = 0 means ∞ efficiency → mpg / km/L would be Infinity
+    //   mpg = 0 or km/L = 0 means 0 efficiency → L/100km would be Infinity
+    if (from === 'L100km') return Infinity; // 0 L/100km → ∞ mpg / km/L
+    if (to   === 'L100km') return Infinity; // 0 mpg / km/L → ∞ L/100km
+    return 0;
+  }
+  // Convert from -> mpg as common base
+  let mpg;
+  switch (from) {
+    case 'mpg':    mpg = v; break;
+    case 'kmL':    mpg = v / 0.425144; break;
+    case 'L100km': mpg = 235.215 / v; break;
+    default: return null;
+  }
+  switch (to) {
+    case 'mpg':    return mpg;
+    case 'kmL':    return mpg * 0.425144;
+    case 'L100km': return mpg === 0 ? Infinity : 235.215 / mpg;
+    default: return null;
+  }
+}
+
+function convertCooking(v, from, to, ingredient) {
+  const density  = COOKING_DENSITIES[ingredient] || 1.0;
+  const cookCat  = getCat('cooking');
+  const fromKind = cookCat.units.find(u => u.id === from)?.kind;
+  const toKind   = cookCat.units.find(u => u.id === to)?.kind;
+  if (!fromKind || !toKind) return null;
+
+  if (fromKind === 'vol' && toKind === 'vol') {
+    const fv = COOK_VOL[from], tv = COOK_VOL[to];
+    if (fv == null || tv == null) return null;
+    return (v * fv) / tv;
+  }
+  if (fromKind === 'wt' && toKind === 'wt') {
+    const fw = COOK_WT[from], tw = COOK_WT[to];
+    if (fw == null || tw == null) return null;
+    return (v * fw) / tw;
+  }
+  if (fromKind === 'vol' && toKind === 'wt') {
+    const fv = COOK_VOL[from], tw = COOK_WT[to];
+    if (fv == null || tw == null) return null;
+    return (v * fv * density) / tw;
+  }
+  if (fromKind === 'wt' && toKind === 'vol') {
+    const fw = COOK_WT[from], tv = COOK_VOL[to];
+    if (fw == null || tv == null) return null;
+    return (v * fw) / (density * tv);
+  }
+  return null;
+}
+
+function convertCurrency(v, from, to) {
+  const fromRate = CURRENCY_RATES[from];
+  const toRate   = CURRENCY_RATES[to];
+  if (!fromRate || !toRate) return null;
+  // Convert to USD then to target
+  return (v / fromRate) * toRate;
+}
+
+// ============================================================
+// NUMBER FORMATTING
+// ============================================================
+
+function formatResult(n) {
+  if (n === null || n === undefined || isNaN(n)) return null;
+  if (!isFinite(n)) return n > 0 ? '∞' : '-∞';
+  // Limit to MAX_SIGNIFICANT_FIGURES to suppress floating-point noise,
+  // then cap the decimal portion to MAX_DECIMAL_PLACES.
+  const s = parseFloat(n.toPrecision(MAX_SIGNIFICANT_FIGURES)).toString();
+  // Split into integer and decimal parts
+  const parts = s.split('.');
+  let intPart = parts[0];
+  let decPart = parts[1] || '';
+  // Add commas to integer part
+  const neg = intPart.startsWith('-');
+  if (neg) intPart = intPart.slice(1);
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (neg) intPart = '-' + intPart;
+  // Trim trailing zeros from decimal
+  decPart = decPart.replace(/0+$/, '');
+  // Cap to MAX_DECIMAL_PLACES then trim trailing zeros again
+  if (decPart.length > MAX_DECIMAL_PLACES) decPart = decPart.slice(0, MAX_DECIMAL_PLACES).replace(/0+$/, '');
+  return decPart ? intPart + '.' + decPart : intPart;
+}
+
+function parseInput(s) {
+  if (s === '' || s === null || s === undefined) return NaN;
+  // Allow scientific notation, decimals, negatives
+  const cleaned = s.replace(/,/g, '').trim();
+  if (cleaned === '' || cleaned === '-' || cleaned === '.') return NaN;
+  const n = Number(cleaned);
+  return isNaN(n) ? NaN : n;
+}
+
+// ============================================================
+// FORMULA DISPLAY
+// ============================================================
+
+function getFormula(catId, fromUnit, toUnit, fromVal, result) {
+  const cat = getCat(catId);
+  if (!cat) return '';
+  const fromLabel = getUnitLabel(catId, fromUnit);
+  const toLabel   = getUnitLabel(catId, toUnit);
+
+  if (cat.type === 'temperature') {
+    const formulas = {
+      'C->F': '°C × 9⁄5 + 32 = °F',
+      'F->C': '(°F − 32) × 5⁄9 = °C',
+      'C->K': '°C + 273.15 = K',
+      'K->C': 'K − 273.15 = °C',
+      'C->R': '(°C + 273.15) × 9⁄5 = °R',
+      'F->K': '(°F − 32) × 5⁄9 + 273.15 = K',
+      'K->F': '(K − 273.15) × 9⁄5 + 32 = °F',
+      'F->R': '°F + 459.67 = °R',
+      'R->F': '°R − 459.67 = °F',
+      'K->R': 'K × 9⁄5 = °R',
+      'R->K': '°R × 5⁄9 = K',
+      'R->C': '(°R − 491.67) × 5⁄9 = °C',
+    };
+    return formulas[fromUnit + '->' + toUnit] || fromLabel + ' → ' + toLabel;
+  }
+
+  if (cat.type === 'fuel') {
+    const fuelForms = {
+      'mpg->kmL':    'mpg × 0.425144 = km/L',
+      'mpg->L100km': '235.215 ÷ mpg = L/100km',
+      'kmL->mpg':    'km/L ÷ 0.425144 = mpg',
+      'kmL->L100km': '100 ÷ (km/L) = L/100km',
+      'L100km->mpg': '235.215 ÷ (L/100km) = mpg',
+      'L100km->kmL': '100 ÷ (L/100km) = km/L',
+    };
+    return fuelForms[fromUnit + '->' + toUnit] || fromLabel + ' → ' + toLabel;
+  }
+
+  if (cat.type === 'currency') {
+    const r = CURRENCY_RATES[toUnit] / CURRENCY_RATES[fromUnit];
+    return '1 ' + fromLabel + ' = ' + formatResult(r) + ' ' + toLabel + ' (approx.)';
+  }
+
+  if (cat.type === 'cooking') {
+    return 'Density-based: ' + fromLabel + ' → ' + toLabel;
+  }
+
+  // linear conversion
+  const factors = getCatFactors(cat, state.dataMode);
+  if (!factors) return fromLabel + ' → ' + toLabel;
+  const ff = factors[fromUnit], tf = factors[toUnit];
+  if (ff == null || tf == null) return fromLabel + ' → ' + toLabel;
+  const ratio = ff / tf;
+  return '1 ' + fromLabel + ' = ' + formatResult(ratio) + ' ' + toLabel;
+}
+
+function getUnitLabel(catId, unitId) {
+  const units = getCatUnits(catId, state.dataMode);
+  const u = units.find(u => u.id === unitId);
+  return u ? u.label : unitId;
+}
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+
+function saveState() {
+  try {
+    localStorage.setItem('ucp_theme',     state.theme);
+    localStorage.setItem('ucp_category',  state.activeCategory);
+    localStorage.setItem('ucp_fromUnit',  state.fromUnit);
+    localStorage.setItem('ucp_toUnit',    state.toUnit);
+    localStorage.setItem('ucp_fromValue', state.fromValue);
+    localStorage.setItem('ucp_dataMode',  state.dataMode);
+    localStorage.setItem('ucp_ingredient',state.cookingIngredient);
+    localStorage.setItem('ucp_favorites', JSON.stringify(state.favorites));
+    localStorage.setItem('ucp_history',   JSON.stringify(state.history.slice(0, MAX_HISTORY_ENTRIES)));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    state.theme           = localStorage.getItem('ucp_theme')     || 'dark';
+    state.activeCategory  = localStorage.getItem('ucp_category')  || 'length';
+    state.dataMode        = localStorage.getItem('ucp_dataMode')  || 'SI';
+    state.cookingIngredient = localStorage.getItem('ucp_ingredient') || 'water';
+    state.favorites       = JSON.parse(localStorage.getItem('ucp_favorites') || '[]');
+    state.history         = JSON.parse(localStorage.getItem('ucp_history')   || '[]');
+
+    const savedFrom = localStorage.getItem('ucp_fromUnit');
+    const savedTo   = localStorage.getItem('ucp_toUnit');
+    const savedVal  = localStorage.getItem('ucp_fromValue');
+
+    // Validate saved units exist in category
+    const cat = getCat(state.activeCategory);
+    if (cat) {
+      const units = getCatUnits(state.activeCategory, state.dataMode);
+      const unitIds = units.map(u => u.id);
+      state.fromUnit  = (savedFrom && unitIds.includes(savedFrom)) ? savedFrom : (cat.defaultFrom || units[0]?.id);
+      state.toUnit    = (savedTo   && unitIds.includes(savedTo))   ? savedTo   : (cat.defaultTo   || units[1]?.id);
+    }
+    state.fromValue = savedVal || '1';
+  } catch(e) {
+    // Use defaults
+  }
+}
+
+// ============================================================
+// HISTORY MANAGEMENT
+// ============================================================
+
+function addHistory(catId, fromUnit, toUnit, fromVal, result) {
+  const cat = getCat(catId);
+  if (!cat) return;
+  const fromLabel = getUnitLabel(catId, fromUnit);
+  const toLabel   = getUnitLabel(catId, toUnit);
+  const entry = {
+    catId, fromUnit, toUnit, fromVal,
+    catName: cat.name, catIcon: cat.icon,
+    fromLabel, toLabel, result,
+    time: Date.now()
+  };
+  // Remove duplicate entry with identical category, units AND value
+  state.history = state.history.filter(h =>
+    !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit && h.fromVal === fromVal)
+  );
+  state.history.unshift(entry);
+  if (state.history.length > MAX_HISTORY_ENTRIES) state.history.pop();
+}
+
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'just now';
+  if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+  return Math.floor(d/86400000) + 'd ago';
+}
+
+// ============================================================
+// FAVORITES MANAGEMENT
+// ============================================================
+
+function isFavorite(catId, fromUnit, toUnit) {
+  return state.favorites.some(f => f.catId === catId && f.fromUnit === fromUnit && f.toUnit === toUnit);
+}
+
+function toggleFavorite(catId, fromUnit, toUnit) {
+  if (isFavorite(catId, fromUnit, toUnit)) {
+    state.favorites = state.favorites.filter(f =>
+      !(f.catId === catId && f.fromUnit === fromUnit && f.toUnit === toUnit)
+    );
+  } else {
+    const cat = getCat(catId);
+    state.favorites.push({
+      catId, fromUnit, toUnit,
+      catName: cat?.name || catId,
+      catIcon: cat?.icon || '',
+      fromLabel: getUnitLabel(catId, fromUnit),
+      toLabel:   getUnitLabel(catId, toUnit),
+    });
+  }
+  saveState();
+}
+
+
+// ============================================================
+// UI RENDERING - TABS
+// ============================================================
+
+function renderTabs() {
+  const tabBar = document.getElementById('tab-bar');
+  const favTab = {id:'favorites', name:'Favorites', icon:'⭐'};
+  const allTabs = [favTab, ...CATEGORIES];
+  tabBar.innerHTML = allTabs.map(cat => `
+    <button class="tab ${state.activeCategory === cat.id ? 'active' : ''}"
+      role="tab" aria-selected="${state.activeCategory === cat.id}"
+      data-cat="${cat.id}" title="${cat.name}">
+      <span class="tab-icon">${cat.icon}</span>
+      <span>${cat.name}</span>
+    </button>
+  `).join('');
+}
+
+// ============================================================
+// UI RENDERING - MAIN CONTENT
+// ============================================================
+
+function renderMain() {
+  const main = document.getElementById('main-content');
+  if (state.activeCategory === 'favorites') {
+    main.innerHTML = buildFavoritesHTML();
+    attachFavEvents();
+    return;
+  }
+  const cat = getCat(state.activeCategory);
+  if (!cat) return;
+  main.innerHTML = buildConverterHTML(cat);
+  attachConverterEvents();
+}
+
+function buildConverterHTML(cat) {
+  const units = getCatUnits(cat.id, state.dataMode);
+  const fromVal = state.fromValue;
+  const numVal  = parseInput(fromVal);
+  const result  = (!isNaN(numVal) && fromVal !== '')
+    ? convertValue(cat.id, state.fromUnit, state.toUnit, numVal, state.dataMode, state.cookingIngredient)
+    : null;
+  const resultStr = (result !== null) ? formatResult(result) : '';
+  const isInvalid = (fromVal !== '' && isNaN(numVal));
+  const formula   = getFormula(cat.id, state.fromUnit, state.toUnit, numVal, result);
+  const starred   = isFavorite(cat.id, state.fromUnit, state.toUnit);
+
+  const fromSelect = buildSelect(units, state.fromUnit, 'from-unit-select');
+  const toSelect   = buildSelect(units, state.toUnit,   'to-unit-select');
+
+  let extras = '';
+  if (cat.type === 'cooking') extras = buildCookingExtras();
+  if (cat.type === 'currency') extras = `<div class="currency-disclaimer">⚠️ <strong>Static demonstration rates only.</strong> Rates last updated: March 2026 (approximate). These values are outdated and must NOT be used for actual financial transactions or currency conversions.</div>`;
+
+  let dataModeBtn = '';
+  if (cat.type === 'data') {
+    dataModeBtn = `<button class="toggle-chip ${state.dataMode==='IEC'?'active':''}" id="data-mode-btn">
+      ${state.dataMode === 'SI' ? 'SI (1KB=1000B)' : 'IEC (1KiB=1024B)'}
+    </button>`;
+  }
+
+  let multiSection = '';
+  if (state.multiConvert) multiSection = buildMultiConvertHTML(cat);
+
+  return `
+    <div class="converter-card">
+      <div class="card-header">
+        <span class="card-icon">${cat.icon}</span>
+        <h2 class="card-title">${cat.name}</h2>
+        ${dataModeBtn}
+      </div>
+      <div class="conversion-area">
+        <div class="unit-section">
+          <div class="unit-label">From</div>
+          <div class="unit-row">
+            <input type="text" class="unit-input" id="from-value-input"
+              value="${escHtml(fromVal)}" placeholder="Enter value"
+              inputmode="decimal" autocomplete="off" spellcheck="false">
+            ${fromSelect}
+          </div>
+        </div>
+        <div class="swap-area">
+          <button class="swap-btn" id="swap-btn" title="Swap units (↔)" aria-label="Swap from and to units">⇅</button>
+        </div>
+        <div class="unit-section">
+          <div class="unit-label">To</div>
+          <div class="unit-row">
+            <div class="result-display ${isInvalid?'invalid':''} ${!resultStr&&!isInvalid?'empty':''}"
+              id="result-display" aria-live="polite">
+              ${isInvalid ? 'Invalid input' : (resultStr || (fromVal===''?'':'…'))}
+            </div>
+            ${toSelect}
+          </div>
+        </div>
+      </div>
+      <div class="formula-display" id="formula-display">
+        ${formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : ''}
+      </div>
+      <div class="action-row">
+        <button class="action-btn copy-btn" id="copy-btn" title="Copy result (Enter)">📋 Copy</button>
+        <button class="action-btn star-btn ${starred?'starred':''}" id="star-btn" title="Save as favorite">
+          ${starred ? '★ Saved' : '☆ Favorite'}
+        </button>
+        <button class="action-btn toggle-chip ${state.multiConvert?'active':''}" id="multi-btn" title="Show all units">
+          ⊞ ${state.multiConvert ? 'Hide Table' : 'All Units'}
+        </button>
+      </div>
+      ${extras}
+    </div>
+    ${state.multiConvert ? '<div class="multi-convert-section">'+buildMultiConvertHTML(cat)+'</div>' : ''}
+  `;
+}
+
+function buildSelect(units, selectedId, selId) {
+  const opts = units.map(u =>
+    `<option value="${escHtml(u.id)}" ${u.id===selectedId?'selected':''}>${escHtml(u.label)}</option>`
+  ).join('');
+  return `<select class="unit-select" id="${selId}" aria-label="Select unit">${opts}</select>`;
+}
+
+function buildCookingExtras() {
+  const ingOpts = Object.keys(COOKING_DENSITIES).map(k =>
+    `<option value="${k}" ${k===state.cookingIngredient?'selected':''}>${COOKING_INGREDIENT_NAMES[k]}</option>`
+  ).join('');
+  const chips = [
+    {label:'¼ cup', val:'0.25'}, {label:'⅓ cup', val:'0.333'},
+    {label:'½ cup', val:'0.5'},  {label:'¾ cup', val:'0.75'},
+    {label:'1 cup', val:'1'},
+  ];
+  const chipHTML = chips.map(c =>
+    `<button class="fraction-chip" data-val="${c.val}" data-unit="cup">${c.label}</button>`
+  ).join('');
+  return `
+    <div class="cooking-extras">
+      <div class="extras-label">🥣 Ingredient (for volume ↔ weight)</div>
+      <select class="ingredient-select" id="ingredient-select">${ingOpts}</select>
+      <div class="extras-label">Quick fractions</div>
+      <div class="fraction-chips">${chipHTML}</div>
+    </div>`;
+}
+
+function buildMultiConvertHTML(cat) {
+  const units   = getCatUnits(cat.id, state.dataMode);
+  const numVal  = parseInput(state.fromValue);
+  const fromLabel = getUnitLabel(cat.id, state.fromUnit);
+  if (isNaN(numVal) || state.fromValue === '') {
+    return `<div class="multi-convert-header">Enter a value to see all conversions</div>`;
+  }
+  const rows = units.map(u => {
+    if (u.id === state.fromUnit) return '';
+    const r = convertValue(cat.id, state.fromUnit, u.id, numVal, state.dataMode, state.cookingIngredient);
+    const rs = (r !== null) ? formatResult(r) : '—';
+    const isActive = u.id === state.toUnit;
+    return `<tr class="${isActive?'active-row':''}">
+      <td>${escHtml(u.label)}</td>
+      <td class="unit-name-col">${escHtml(u.name)}</td>
+      <td class="val-col">${escHtml(rs)}</td>
+      <td><button class="tbl-copy" data-val="${escHtml(rs)}" data-unit="${escHtml(u.id)}">Copy</button></td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="multi-convert-header">All conversions for <strong>${escHtml(formatResult(numVal))} ${escHtml(fromLabel)}</strong></div>
+    <table class="multi-table">
+      <thead><tr><th>Unit</th><th>Name</th><th>Value</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ============================================================
+// UI RENDERING - FAVORITES
+// ============================================================
+
+function buildFavoritesHTML() {
+  if (state.favorites.length === 0) {
+    return `<div class="fav-empty">
+      <div class="fav-empty-icon">⭐</div>
+      <div class="fav-empty-title">No favorites yet</div>
+      <div class="fav-empty-hint">Click ☆ on any conversion to save it here</div>
+    </div>`;
+  }
+  const cards = state.favorites.map((fav, i) => `
+    <div class="fav-card" data-fav-idx="${i}">
+      <div class="fav-card-head">
+        <span class="fav-card-icon">${escHtml(fav.catIcon)}</span>
+        <span class="fav-card-cat">${escHtml(fav.catName)}</span>
+        <button class="fav-delete" data-del="${i}" title="Remove favorite" aria-label="Remove favorite">✕</button>
+      </div>
+      <div class="fav-units">
+        <span>${escHtml(fav.fromLabel)}</span>
+        <span class="fav-arrow">→</span>
+        <span>${escHtml(fav.toLabel)}</span>
+      </div>
+    </div>
+  `).join('');
+  return `<div class="favorites-grid">${cards}</div>`;
+}
+
+// ============================================================
+// UI RENDERING - HISTORY PANEL
+// ============================================================
+
+function renderHistoryPanel() {
+  const list = document.getElementById('history-list');
+  if (!list) return;
+  if (state.history.length === 0) {
+    list.innerHTML = '<div class="history-empty">No conversions yet</div>';
+    return;
+  }
+  list.innerHTML = state.history.map((h, i) => `
+    <div class="history-item" data-hist-idx="${i}">
+      <span class="h-item-icon">${escHtml(h.catIcon)}</span>
+      <span class="h-item-text">
+        <span class="h-item-from">${escHtml(formatResult(parseInput(h.fromVal)))} ${escHtml(h.fromLabel)}</span>
+        <span class="h-item-arrow">→</span>
+        <strong>${escHtml(h.result)} ${escHtml(h.toLabel)}</strong>
+      </span>
+      <span class="h-item-time">${timeAgo(h.time)}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// UPDATE RESULT (LIVE)
+// ============================================================
+
+let _debounceTimer = null;
+
+function updateResult() {
+  const cat = getCat(state.activeCategory);
+  if (!cat) return;
+
+  const numVal = parseInput(state.fromValue);
+  const isInvalid = state.fromValue !== '' && isNaN(numVal);
+  const result = (!isNaN(numVal) && state.fromValue !== '')
+    ? convertValue(cat.id, state.fromUnit, state.toUnit, numVal, state.dataMode, state.cookingIngredient)
+    : null;
+  const resultStr = (result !== null) ? formatResult(result) : '';
+  const formula   = getFormula(cat.id, state.fromUnit, state.toUnit, numVal, result);
+
+  const rDisplay  = document.getElementById('result-display');
+  const fDisplay  = document.getElementById('formula-display');
+  const multiSect = document.querySelector('.multi-convert-section');
+
+  if (rDisplay) {
+    rDisplay.classList.remove('invalid');
+    rDisplay.textContent = isInvalid ? 'Invalid input' : (resultStr || (state.fromValue === '' ? '' : ''));
+    if (isInvalid) rDisplay.classList.add('invalid');
+  }
+  if (fDisplay) {
+    fDisplay.innerHTML = formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : '';
+  }
+  if (multiSect && state.multiConvert) {
+    multiSect.innerHTML = buildMultiConvertHTML(cat);
+    attachMultiEvents();
+  }
+
+  // Save to history (debounced)
+  if (!isInvalid && resultStr && state.fromValue !== '') {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(() => {
+      addHistory(cat.id, state.fromUnit, state.toUnit, state.fromValue, resultStr);
+      saveState();
+    }, HISTORY_SAVE_DEBOUNCE_MS);
+  }
+}
+
+// ============================================================
+// ATTACH EVENTS - CONVERTER CARD
+// ============================================================
+
+function attachConverterEvents() {
+  const fromInput  = document.getElementById('from-value-input');
+  const fromSelect = document.getElementById('from-unit-select');
+  const toSelect   = document.getElementById('to-unit-select');
+  const swapBtn    = document.getElementById('swap-btn');
+  const copyBtn    = document.getElementById('copy-btn');
+  const starBtn    = document.getElementById('star-btn');
+  const multiBtn   = document.getElementById('multi-btn');
+  const dataModeBtn= document.getElementById('data-mode-btn');
+  const ingSelect  = document.getElementById('ingredient-select');
+
+  if (fromInput) {
+    fromInput.addEventListener('input', e => {
+      state.fromValue = e.target.value;
+      updateResult();
+    });
+    fromInput.addEventListener('focus', () => fromInput.select());
+    fromInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') copyResult();
+    });
+  }
+
+  if (fromSelect) {
+    fromSelect.addEventListener('change', e => {
+      state.fromUnit = e.target.value;
+      updateResult();
+      updateStarBtn();
+      saveState();
+    });
+  }
+
+  if (toSelect) {
+    toSelect.addEventListener('change', e => {
+      state.toUnit = e.target.value;
+      updateResult();
+      updateStarBtn();
+      saveState();
+    });
+  }
+
+  if (swapBtn) {
+    swapBtn.addEventListener('click', () => {
+      swapBtn.classList.add('spinning');
+      swapBtn.addEventListener('animationend', () => swapBtn.classList.remove('spinning'), {once:true});
+      // Swap units and value
+      const oldFrom  = state.fromUnit;
+      const oldTo    = state.toUnit;
+      const numVal   = parseInput(state.fromValue);
+      const result   = (!isNaN(numVal) && state.fromValue !== '')
+        ? convertValue(state.activeCategory, oldFrom, oldTo, numVal, state.dataMode, state.cookingIngredient)
+        : null;
+      state.fromUnit = oldTo;
+      state.toUnit   = oldFrom;
+      if (result !== null) state.fromValue = formatResult(result).replace(/,/g,'');
+      renderMain();
+      saveState();
+    });
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyResult);
+  }
+
+  if (starBtn) {
+    starBtn.addEventListener('click', () => {
+      toggleFavorite(state.activeCategory, state.fromUnit, state.toUnit);
+      updateStarBtn();
+    });
+  }
+
+  if (multiBtn) {
+    multiBtn.addEventListener('click', () => {
+      state.multiConvert = !state.multiConvert;
+      const cat = getCat(state.activeCategory);
+      const main = document.getElementById('main-content');
+      multiBtn.textContent = state.multiConvert ? '⊞ Hide Table' : '⊞ All Units';
+      multiBtn.classList.toggle('active', state.multiConvert);
+      // Toggle multi-convert section
+      let existingMulti = main.querySelector('.multi-convert-section');
+      if (state.multiConvert) {
+        if (!existingMulti) {
+          const div = document.createElement('div');
+          div.className = 'multi-convert-section';
+          div.innerHTML = buildMultiConvertHTML(cat);
+          main.appendChild(div);
+          attachMultiEvents();
+        }
+      } else {
+        if (existingMulti) existingMulti.remove();
+      }
+    });
+  }
+
+  if (dataModeBtn) {
+    dataModeBtn.addEventListener('click', () => {
+      state.dataMode = state.dataMode === 'SI' ? 'IEC' : 'SI';
+      const cat = getCat('data');
+      const units = getCatUnits('data', state.dataMode);
+      // Reset to valid units for new mode
+      state.fromUnit = units[2]?.id || units[0]?.id; // MB or MiB
+      state.toUnit   = units[3]?.id || units[1]?.id; // GB or GiB
+      renderMain();
+      saveState();
+    });
+  }
+
+  if (ingSelect) {
+    ingSelect.addEventListener('change', e => {
+      state.cookingIngredient = e.target.value;
+      updateResult();
+      saveState();
+    });
+  }
+
+  // Fraction chips
+  document.querySelectorAll('.fraction-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val  = btn.dataset.val;
+      const unit = btn.dataset.unit;
+      state.fromValue = val;
+      state.fromUnit  = unit;
+      const fromInput = document.getElementById('from-value-input');
+      if (fromInput) fromInput.value = val;
+      const fromSelect = document.getElementById('from-unit-select');
+      if (fromSelect) fromSelect.value = unit;
+      updateResult();
+      saveState();
+    });
+  });
+
+  attachMultiEvents();
+}
+
+function attachMultiEvents() {
+  document.querySelectorAll('.tbl-copy').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const val = btn.dataset.val;
+      copyToClipboard(val, btn, '✓ Done', 'Copy');
+    });
+  });
+}
+
+function attachFavEvents() {
+  document.querySelectorAll('.fav-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.classList.contains('fav-delete')) return;
+      const idx = parseInt(card.dataset.favIdx);
+      const fav = state.favorites[idx];
+      if (!fav) return;
+      state.activeCategory = fav.catId;
+      state.fromUnit = fav.fromUnit;
+      state.toUnit   = fav.toUnit;
+      renderTabs();
+      renderMain();
+      saveState();
+    });
+  });
+  document.querySelectorAll('.fav-delete').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.del);
+      state.favorites.splice(idx, 1);
+      saveState();
+      renderMain(); // re-render favorites
+    });
+  });
+}
+
+// ============================================================
+// COPY LOGIC
+// ============================================================
+
+function copyResult() {
+  const display = document.getElementById('result-display');
+  if (!display || display.classList.contains('invalid')) return;
+  const text = display.textContent.trim();
+  if (!text || text === '…') return;
+  const btn = document.getElementById('copy-btn');
+  copyToClipboard(text, btn, '✓ Copied!', '📋 Copy');
+}
+
+function copyToClipboard(text, btn, successLabel, resetLabel) {
+  const plain = text.replace(/,/g, ''); // strip commas once
+  const showSuccess = () => {
+    if (btn) {
+      btn.textContent = successLabel;
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = resetLabel; btn.classList.remove('copied'); }, 1800);
+    }
+  };
+  try {
+    navigator.clipboard.writeText(plain).then(showSuccess).catch(() => fallbackCopy(plain, showSuccess));
+  } catch(e) {
+    fallbackCopy(plain, showSuccess);
+  }
+}
+
+function fallbackCopy(plain, onSuccess) {
+  const ta = document.createElement('textarea');
+  ta.value = plain;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (onSuccess) onSuccess();
+}
+
+function updateStarBtn() {
+  const btn = document.getElementById('star-btn');
+  if (!btn) return;
+  const starred = isFavorite(state.activeCategory, state.fromUnit, state.toUnit);
+  btn.textContent = starred ? '★ Saved' : '☆ Favorite';
+  btn.classList.toggle('starred', starred);
+}
+
+// ============================================================
+// HISTORY PANEL
+// ============================================================
+
+function openHistory() {
+  const panel = document.getElementById('history-panel');
+  const overlay = document.getElementById('overlay');
+  renderHistoryPanel();
+  panel?.classList.add('open');
+  overlay?.classList.add('visible');
+  panel?.setAttribute('aria-hidden','false');
+  state.historyOpen = true;
+
+  document.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.histIdx);
+      const h   = state.history[idx];
+      if (!h) return;
+      state.activeCategory = h.catId;
+      state.fromUnit  = h.fromUnit;
+      state.toUnit    = h.toUnit;
+      state.fromValue = h.fromVal;
+      closeHistory();
+      renderTabs();
+      renderMain();
+      saveState();
+    });
+  });
+}
+
+function closeHistory() {
+  const panel = document.getElementById('history-panel');
+  const overlay = document.getElementById('overlay');
+  panel?.classList.remove('open');
+  overlay?.classList.remove('visible');
+  panel?.setAttribute('aria-hidden','true');
+  state.historyOpen = false;
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+
+function buildSearchIndex() {
+  const index = [];
+  CATEGORIES.forEach(cat => {
+    // Add category itself
+    index.push({ type:'cat', catId:cat.id, catName:cat.name, catIcon:cat.icon, label:cat.name, sub:'Category' });
+    // Add units
+    const units = getCatUnits(cat.id, state.dataMode);
+    units.forEach(u => {
+      index.push({ type:'unit', catId:cat.id, catName:cat.name, catIcon:cat.icon, unitId:u.id, label:u.name + ' (' + u.label + ')', sub:cat.name });
+    });
+  });
+  return index;
+}
+
+function handleSearch(query) {
+  const dropdown = document.getElementById('search-dropdown');
+  if (!dropdown) return;
+  if (!query.trim()) { dropdown.classList.remove('visible'); return; }
+  const q = query.toLowerCase();
+  const index = buildSearchIndex();
+  const results = index.filter(item =>
+    item.label.toLowerCase().includes(q) || item.catName.toLowerCase().includes(q)
+  ).slice(0, 12);
+
+  if (results.length === 0) {
+    dropdown.innerHTML = '<div class="search-result" style="justify-content:center;color:var(--text-muted)">No results found</div>';
+  } else {
+    dropdown.innerHTML = results.map((r, i) => `
+      <div class="search-result" data-search-idx="${i}">
+        <span class="search-result-icon">${escHtml(r.catIcon)}</span>
+        <span class="search-result-text">${escHtml(r.label)}</span>
+        <span class="search-result-sub">${escHtml(r.sub)}</span>
+      </div>
+    `).join('');
+    dropdown.querySelectorAll('.search-result').forEach((el, i) => {
+      el.addEventListener('click', () => {
+        const r = results[i];
+        state.activeCategory = r.catId;
+        if (r.type === 'unit') {
+          // Set that unit as 'from'
+          state.fromUnit = r.unitId;
+          const units = getCatUnits(r.catId, state.dataMode);
+          const otherUnit = units.find(u => u.id !== r.unitId);
+          if (otherUnit) state.toUnit = otherUnit.id;
+        } else {
+          const cat = getCat(r.catId);
+          if (cat) {
+            state.fromUnit = cat.defaultFrom;
+            state.toUnit   = cat.defaultTo;
+          }
+        }
+        dropdown.classList.remove('visible');
+        document.getElementById('search-input').value = '';
+        renderTabs();
+        renderMain();
+        saveState();
+        // Scroll to top of main
+        document.getElementById('main-content')?.scrollIntoView({behavior:'smooth'});
+      });
+    });
+  }
+  dropdown.classList.add('visible');
+}
+
+// ============================================================
+// THEME TOGGLE
+// ============================================================
+
+function applyTheme(theme) {
+  const app = document.getElementById('app');
+  const meta = document.getElementById('theme-color-meta');
+  if (theme === 'dark') {
+    app.classList.add('dark');
+    document.getElementById('theme-toggle').textContent = '🌙';
+    if (meta) meta.content = '#0f0f1a';
+  } else {
+    app.classList.remove('dark');
+    document.getElementById('theme-toggle').textContent = '☀️';
+    if (meta) meta.content = '#e0e7ff';
+  }
+}
+
+// ============================================================
+// ESCAPE HTML
+// ============================================================
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+function init() {
+  // Load persisted state
+  loadState();
+  applyTheme(state.theme);
+
+  // Initial render
+  renderTabs();
+  renderMain();
+
+  // ---- GLOBAL EVENT DELEGATION for tabs ----
+  document.getElementById('tab-bar').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    const catId = tab.dataset.cat;
+    if (!catId || catId === state.activeCategory) return;
+    state.activeCategory = catId;
+    // Set default units when switching categories
+    if (catId !== 'favorites') {
+      const cat = getCat(catId);
+      if (cat) {
+        const units = getCatUnits(catId, state.dataMode);
+        const unitIds = units.map(u => u.id);
+        if (!unitIds.includes(state.fromUnit)) state.fromUnit = cat.defaultFrom || units[0]?.id;
+        if (!unitIds.includes(state.toUnit))   state.toUnit   = cat.defaultTo   || units[1]?.id;
+        if (state.fromUnit === state.toUnit)    state.toUnit   = units.find(u => u.id !== state.fromUnit)?.id || state.toUnit;
+      }
+    }
+    renderTabs();
+    renderMain();
+    saveState();
+    // Scroll tabs to show active
+    tab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  });
+
+  // ---- THEME TOGGLE ----
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(state.theme);
+    saveState();
+  });
+
+  // ---- HISTORY ----
+  document.getElementById('history-fab').addEventListener('click', openHistory);
+  document.getElementById('h-close').addEventListener('click', closeHistory);
+  document.getElementById('overlay').addEventListener('click', closeHistory);
+  document.getElementById('h-clear').addEventListener('click', () => {
+    state.history = [];
+    renderHistoryPanel();
+    saveState();
+  });
+
+  // ---- SEARCH ----
+  const searchInput = document.getElementById('search-input');
+  const searchDropdown = document.getElementById('search-dropdown');
+  let searchTimer = null;
+  searchInput.addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => handleSearch(e.target.value), 150);
+  });
+  searchInput.addEventListener('focus', e => {
+    if (e.target.value) handleSearch(e.target.value);
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-container')) {
+      searchDropdown.classList.remove('visible');
+    }
+  });
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      searchDropdown.classList.remove('visible');
+      searchInput.blur();
+    }
+  });
+
+  // ---- KEYBOARD SHORTCUT: Enter copies ----
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement?.id !== 'from-value-input') {
+      copyResult();
+    }
+  });
+
+  // Scroll active tab into view on load
+  setTimeout(() => {
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) activeTab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }, 100);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+})(); // end IIFE
+</script>
+</body>
+</html>
