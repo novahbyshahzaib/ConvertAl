@@ -1006,7 +1006,7 @@ function addHistory(catId, fromUnit, toUnit, fromVal, result) {
   };
   // Remove duplicate entry with identical category, units AND value
   state.history = state.history.filter(h =>
-    !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit && h.value === value)
+    !(h.catId === catId && h.fromUnit === fromUnit && h.toUnit === toUnit && h.fromVal === fromVal)
   );
   state.history.unshift(entry);
   if (state.history.length > 20) state.history.pop();
