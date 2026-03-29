@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://convert-al.vercel.app/sitemap.xml
