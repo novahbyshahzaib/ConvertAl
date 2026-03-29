@@ -2557,8 +2557,13 @@ function safeEval(expr) {
     .replace(/√\(/g, 'Math.sqrt(')
     .replace(/abs\(/g, 'Math.abs(')
     .replace(/\^/g, '**');
-  // Only allow safe math characters
-  if (!/^[0-9+\-*/.()%e sMathqrtpisoclanb]*$/.test(e)) return null;
+  // Validate: after substitution, only allow digits, operators, parentheses, decimal,
+  // spaces, and the exact names used by Math.* functions we substituted above.
+  // Replace allowed Math.* calls with a placeholder number, then check remaining chars.
+  const sanitized = e
+    .replace(/\bMath\.(sin|cos|tan|asin|acos|atan|sqrt|log10|log|abs)\(/g, '1*(')
+    .replace(/\bMath\.(PI|E)\b/g, '1');
+  if (!/^[\d\s+\-*/.()%e]+$/.test(sanitized)) return null;
   try {
     // eslint-disable-next-line no-new-func
     const result = Function('"use strict"; return (' + e + ')')();
@@ -3658,7 +3663,9 @@ document.addEventListener('DOMContentLoaded', init);
 // ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker
+      .register('sw.js')
+      .catch(() => { /* SW registration failed silently */ });
   });
 }
 
