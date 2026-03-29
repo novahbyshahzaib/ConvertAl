@@ -17,19 +17,23 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ===== CSS VARIABLES (Light Theme Default) ===== */
+    /* Light mode uses solid colors to prevent visibility issues on Android Chrome.
+       Semi-transparent rgba() backgrounds can cause text to appear invisible when
+       backdrop-filter is involved or when color compositing fails on mobile. */
     :root {
       --bg: #f0f4ff;
-      --surface: rgba(255,255,255,0.8);
-      --surface-hover: rgba(255,255,255,0.95);
-      --border: rgba(0,0,0,0.1);
+      --surface: #ffffff;
+      --surface-hover: #f8faff;
+      --border: #dde3f0;
       --text: #1e293b;
       --text-muted: #64748b;
       --accent: #6366f1;
       --accent-hover: #4f46e5;
-      --glass: rgba(255,255,255,0.6);
-      --shadow: 0 8px 32px rgba(0,0,0,0.1);
+      --glass: #f5f7ff;
+      --shadow: 0 8px 32px rgba(0,0,0,0.08);
       --gradient: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 50%, #e8eeff 100%);
       --tr: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color-scheme: light;
     }
     .dark {
       --bg: #0f0f1a;
@@ -43,6 +47,7 @@
       --glass: rgba(255,255,255,0.03);
       --shadow: 0 8px 32px rgba(0,0,0,0.4);
       --gradient: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+      color-scheme: dark;
     }
 
     body {
@@ -181,6 +186,7 @@
     }
     .unit-input::placeholder { color: var(--text-muted); opacity: 0.5; }
     .unit-select {
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; color: var(--text); font-family: inherit;
       font-size: 14px; font-weight: 500; padding: 6px 10px;
@@ -243,6 +249,7 @@
       letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px;
     }
     .ingredient-select {
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
       width: 100%; background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; color: var(--text); font-family: inherit;
       font-size: 14px; padding: 8px 12px; cursor: pointer; outline: none; margin-bottom: 12px;
@@ -409,10 +416,194 @@
     @media (max-width: 400px) {
       .unit-input, .result-display { font-size: 18px; }
     }
+
+    /* ===== ADDITIONAL INPUT SAFETY (Android Chrome fix) ===== */
+    /* Ensure form elements always show explicit foreground color */
+    input, select, textarea, button {
+      color: var(--text);
+    }
+    input::placeholder { color: var(--text-muted); }
+    /* Remove backdrop-filter in light mode — it can cause invisible-text
+       compositing bugs on Android Chrome with rgba backgrounds. */
+    #app:not(.dark) .header,
+    #app:not(.dark) .tab-bar-wrapper,
+    #app:not(.dark) .search-dropdown,
+    #app:not(.dark) .history-panel {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    /* Keep backdrop-filter only in dark mode where it's needed */
+    #app.dark .header,
+    #app.dark .tab-bar-wrapper {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* ===== CURRENCY LIVE BADGE ===== */
+    .currency-live-badge {
+      display: none; align-items: center; gap: 6px;
+      margin-top: 10px; padding: 7px 12px;
+      background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 8px; font-size: 12px; color: #10b981; font-weight: 500;
+    }
+    .currency-live-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    /* ===== SHARE BUTTON ===== */
+    .share-btn.shared { background: #6366f1; border-color: #6366f1; color: white; }
+
+    /* ===== SCIENTIFIC NOTATION TOGGLE ===== */
+    .sci-toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .sci-toggle-btn {
+      padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); font-family: inherit;
+      font-size: 11px; font-weight: 500; cursor: pointer; transition: var(--tr);
+      flex-shrink: 0;
+    }
+    .sci-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .sci-toggle-btn.active { background: rgba(99,102,241,0.12); border-color: var(--accent); color: var(--accent); }
+    .sci-notation-hint { font-size: 11px; color: var(--text-muted); opacity: 0.7; }
+
+    /* ===== NUMPAD ===== */
+    .numpad-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 310;
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 16px 16px 28px;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .numpad-panel.open { transform: translateY(0); }
+    .numpad-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .numpad-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .numpad-close-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: var(--tr);
+    }
+    .numpad-close-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .numpad-close-btn svg { width: 14px; height: 14px; }
+    .numpad-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+      max-width: 340px; margin: 0 auto;
+    }
+    .numpad-key {
+      height: 52px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--glass); color: var(--text);
+      font-family: inherit; font-size: 20px; font-weight: 500;
+      cursor: pointer; transition: background 0.1s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; user-select: none;
+    }
+    .numpad-key:hover { background: var(--surface-hover); }
+    .numpad-key:active { transform: scale(0.93); background: var(--border); }
+    .numpad-key svg { width: 18px; height: 18px; }
+    .numpad-key-action {
+      background: var(--surface); font-size: 14px; font-weight: 600;
+      color: var(--text-muted);
+    }
+    .numpad-key-action:hover { color: var(--text); }
+    .numpad-key-accent {
+      background: var(--accent); color: white; border-color: var(--accent);
+      font-size: 13px;
+    }
+    .numpad-key-accent:hover { background: var(--accent-hover); }
+    .numpad-key-zero { grid-column: span 2; }
+    .numpad-toggle-btn {
+      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 500; transition: var(--tr);
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;
+    }
+    .numpad-toggle-btn svg { width: 13px; height: 13px; }
+    .numpad-toggle-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .numpad-toggle-btn.active { background: rgba(99,102,241,0.1); border-color: var(--accent); color: var(--accent); }
+
+    /* ===== BASE CONVERTER ===== */
+    .base-rows { display: flex; flex-direction: column; gap: 0; }
+    .base-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.15s; border-radius: 4px;
+    }
+    .base-row:last-child { border-bottom: none; }
+    .base-row:not(.active-base):hover { background: var(--surface-hover); }
+    .base-label {
+      width: 44px; font-size: 12px; font-weight: 700; flex-shrink: 0;
+      color: var(--text-muted); letter-spacing: 0.05em;
+    }
+    .active-base .base-label {
+      color: var(--accent); background: rgba(99,102,241,0.12);
+      border-radius: 6px; padding: 2px 6px; text-align: center;
+    }
+    .base-input-wrap { flex: 1; min-width: 0; }
+    .base-value-input {
+      width: 100%; background: transparent; border: none; outline: none;
+      font-family: 'Courier New', monospace, inherit; font-size: 17px;
+      font-weight: 600; color: var(--text); letter-spacing: 0.03em;
+    }
+    .base-value-display {
+      font-family: 'Courier New', monospace, inherit; font-size: 17px;
+      font-weight: 600; color: var(--text); word-break: break-all; letter-spacing: 0.03em;
+    }
+    .base-copy-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: var(--tr);
+    }
+    .base-copy-btn svg { width: 14px; height: 14px; }
+    .base-copy-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .base-copy-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+    /* ===== PERCENTAGE CALCULATOR ===== */
+    .percent-modes { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+    .percent-mode-btn {
+      padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); font-family: inherit;
+      font-size: 12px; font-weight: 500; cursor: pointer; transition: var(--tr);
+    }
+    .percent-mode-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .percent-mode-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .percent-inputs { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .percent-input-group { flex: 1; min-width: 120px; }
+    .percent-input-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .percent-input {
+      width: 100%; background: var(--glass); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: inherit;
+      font-size: 20px; font-weight: 600; padding: 10px 12px; outline: none;
+      transition: var(--tr);
+    }
+    .percent-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .percent-result-section {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 14px;
+    }
+    .percent-result-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .percent-result {
+      font-size: 32px; font-weight: 700; color: var(--text);
+      min-height: 44px; word-break: break-all;
+    }
+    .percent-unit { font-size: 20px; font-weight: 500; color: var(--text-muted); margin-left: 3px; }
+
+    @media (max-width: 640px) {
+      .numpad-grid { gap: 6px; }
+      .numpad-key { height: 46px; font-size: 18px; }
+    }
   </style>
 </head>
 <body>
-<div id="app" class="dark">
+<div id="app">
 
   <!-- HEADER -->
   <header class="header">
@@ -465,6 +656,37 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
     <span>History</span>
   </button>
+
+  <!-- NUMPAD PANEL -->
+  <div class="numpad-panel" id="numpad-panel" role="dialog" aria-label="On-screen numpad" aria-hidden="true">
+    <div class="numpad-header">
+      <span class="numpad-title">Keypad</span>
+      <button class="numpad-close-btn" id="numpad-close" aria-label="Close numpad">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="numpad-grid" id="numpad-grid">
+      <button class="numpad-key" data-key="7" aria-label="7">7</button>
+      <button class="numpad-key" data-key="8" aria-label="8">8</button>
+      <button class="numpad-key" data-key="9" aria-label="9">9</button>
+      <button class="numpad-key numpad-key-action" data-key="backspace" aria-label="Backspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.25-5.25H6.75a2.25 2.25 0 0 0-2.25 2.25v1.5a2.25 2.25 0 0 0 2.25 2.25h3m0-6L15 6.75h3.75A2.25 2.25 0 0 1 21 9v6a2.25 2.25 0 0 1-2.25 2.25H15l-5.25-3.75"/></svg>
+      </button>
+      <button class="numpad-key" data-key="4" aria-label="4">4</button>
+      <button class="numpad-key" data-key="5" aria-label="5">5</button>
+      <button class="numpad-key" data-key="6" aria-label="6">6</button>
+      <button class="numpad-key numpad-key-action" data-key="clear" aria-label="Clear">C</button>
+      <button class="numpad-key" data-key="1" aria-label="1">1</button>
+      <button class="numpad-key" data-key="2" aria-label="2">2</button>
+      <button class="numpad-key" data-key="3" aria-label="3">3</button>
+      <button class="numpad-key numpad-key-action" data-key="plusminus" aria-label="Toggle sign">&#177;</button>
+      <button class="numpad-key numpad-key-zero" data-key="0" aria-label="0">0</button>
+      <button class="numpad-key numpad-key-action" data-key="." aria-label="Decimal point">.</button>
+      <button class="numpad-key numpad-key-accent" data-key="enter" aria-label="Copy result">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+      </button>
+    </div>
+  </div>
 
 </div>
 <script>
@@ -730,7 +952,7 @@ const CATEGORIES = [
 // ============================================================
 
 let state = {
-  theme: 'dark',
+  theme: 'light',
   activeCategory: 'length',
   fromUnit: 'm',
   toUnit: 'km',
@@ -741,6 +963,16 @@ let state = {
   historyOpen: false,
   favorites: [],
   history: [],
+  // Base converter state
+  basesInput: '',
+  basesInputBase: 'dec',
+  // Percentage calculator state
+  percentMode: 0,
+  percentX: '',
+  percentY: '',
+  // Display state
+  sciNotation: false,
+  numpadVisible: false,
 };
 
 // ============================================================
@@ -952,7 +1184,8 @@ function getFormula(catId, fromUnit, toUnit, fromVal, result) {
 
   if (cat.type === 'currency') {
     const r = CURRENCY_RATES[toUnit] / CURRENCY_RATES[fromUnit];
-    return '1 ' + fromLabel + ' = ' + formatResult(r) + ' ' + toLabel + ' (approx.)';
+    const suffix = liveRatesDate ? ' (live · ' + liveRatesDate + ')' : ' (approx.)';
+    return '1 ' + fromLabel + ' = ' + formatResult(r) + ' ' + toLabel + suffix;
   }
 
   if (cat.type === 'cooking') {
@@ -980,26 +1213,39 @@ function getUnitLabel(catId, unitId) {
 
 function saveState() {
   try {
-    localStorage.setItem('ucp_theme',     state.theme);
-    localStorage.setItem('ucp_category',  state.activeCategory);
-    localStorage.setItem('ucp_fromUnit',  state.fromUnit);
-    localStorage.setItem('ucp_toUnit',    state.toUnit);
-    localStorage.setItem('ucp_fromValue', state.fromValue);
-    localStorage.setItem('ucp_dataMode',  state.dataMode);
-    localStorage.setItem('ucp_ingredient',state.cookingIngredient);
-    localStorage.setItem('ucp_favorites', JSON.stringify(state.favorites));
-    localStorage.setItem('ucp_history',   JSON.stringify(state.history.slice(0, MAX_HISTORY_ENTRIES)));
+    localStorage.setItem('ucp_theme',          state.theme);
+    localStorage.setItem('ucp_category',       state.activeCategory);
+    localStorage.setItem('ucp_fromUnit',       state.fromUnit);
+    localStorage.setItem('ucp_toUnit',         state.toUnit);
+    localStorage.setItem('ucp_fromValue',      state.fromValue);
+    localStorage.setItem('ucp_dataMode',       state.dataMode);
+    localStorage.setItem('ucp_ingredient',     state.cookingIngredient);
+    localStorage.setItem('ucp_favorites',      JSON.stringify(state.favorites));
+    localStorage.setItem('ucp_history',        JSON.stringify(state.history.slice(0, MAX_HISTORY_ENTRIES)));
+    localStorage.setItem('ucp_basesInput',     state.basesInput || '');
+    localStorage.setItem('ucp_basesInputBase', state.basesInputBase || 'dec');
+    localStorage.setItem('ucp_percentMode',    String(state.percentMode || 0));
+    localStorage.setItem('ucp_percentX',       state.percentX || '');
+    localStorage.setItem('ucp_percentY',       state.percentY || '');
+    localStorage.setItem('ucp_sciNotation',    String(!!state.sciNotation));
   } catch(e) {}
 }
 
 function loadState() {
   try {
-    state.theme           = localStorage.getItem('ucp_theme')     || 'dark';
+    state.theme           = localStorage.getItem('ucp_theme')     || 'light';
     state.activeCategory  = localStorage.getItem('ucp_category')  || 'length';
     state.dataMode        = localStorage.getItem('ucp_dataMode')  || 'SI';
     state.cookingIngredient = localStorage.getItem('ucp_ingredient') || 'water';
     state.favorites       = JSON.parse(localStorage.getItem('ucp_favorites') || '[]');
     state.history         = JSON.parse(localStorage.getItem('ucp_history')   || '[]');
+    // New state fields
+    state.basesInput      = localStorage.getItem('ucp_basesInput')    || '';
+    state.basesInputBase  = localStorage.getItem('ucp_basesInputBase') || 'dec';
+    state.percentMode     = parseInt(localStorage.getItem('ucp_percentMode') || '0');
+    state.percentX        = localStorage.getItem('ucp_percentX') || '';
+    state.percentY        = localStorage.getItem('ucp_percentY') || '';
+    state.sciNotation     = localStorage.getItem('ucp_sciNotation') === 'true';
 
     const savedFrom = localStorage.getItem('ucp_fromUnit');
     const savedTo   = localStorage.getItem('ucp_toUnit');
@@ -1098,6 +1344,12 @@ const SVG_PATHS = {
   check:       'M4.5 12.75l6 6 9-13.5',
   trash:       'M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16',
   ingredient:  'M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zM9 21h6',
+  // New feature icons
+  share:       'M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z',
+  bases:       'M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5',
+  percent:     'M4.5 19.5l15-15m-2.25 2.25a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5m-10.5 12a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5',
+  numpad:      'M9 7.5l3 4.5m0 0 3-4.5M12 12v4.5M3 18l3-10.5M3 18h18M21 18l-3-10.5M3 7.5h18',
+  scientific:  'M5.25 8.25h13.5m-13.5 7.5h13.5M8.25 3l-3 18M18.75 3l-3 18',
   // Categories
   length:      'M3 9h18v6H3V9zm3 0v3m3-3v2m3-3v3m3-3v2m3-3v3',
   weight:      'M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 5.491Z',
@@ -1131,10 +1383,16 @@ function renderIcon(name, extraClass) {
 // UI RENDERING - TABS
 // ============================================================
 
+// Special tabs that appear at the end of the tab bar
+const SPECIAL_TABS = [
+  { id: 'bases',   name: 'Base Conv.',  icon: 'bases'   },
+  { id: 'percent', name: 'Percentage',  icon: 'percent' },
+];
+
 function renderTabs() {
   const tabBar = document.getElementById('tab-bar');
   const favTab = {id:'favorites', name:'Favorites', icon:'star'};
-  const allTabs = [favTab, ...CATEGORIES];
+  const allTabs = [favTab, ...CATEGORIES, ...SPECIAL_TABS];
   tabBar.innerHTML = allTabs.map(cat => `
     <button class="tab ${state.activeCategory === cat.id ? 'active' : ''}"
       role="tab" aria-selected="${state.activeCategory === cat.id}"
@@ -1154,6 +1412,16 @@ function renderMain() {
   if (state.activeCategory === 'favorites') {
     main.innerHTML = buildFavoritesHTML();
     attachFavEvents();
+    return;
+  }
+  if (state.activeCategory === 'bases') {
+    main.innerHTML = buildBaseConverterHTML();
+    attachBaseConverterEvents();
+    return;
+  }
+  if (state.activeCategory === 'percent') {
+    main.innerHTML = buildPercentCalcHTML();
+    attachPercentCalcEvents();
     return;
   }
   const cat = getCat(state.activeCategory);
@@ -1179,7 +1447,18 @@ function buildConverterHTML(cat) {
 
   let extras = '';
   if (cat.type === 'cooking') extras = buildCookingExtras();
-  if (cat.type === 'currency') extras = `<div class="currency-disclaimer">${renderIcon('warning')} <strong>Static demonstration rates only.</strong> Rates last updated: March 2026 (approximate). These values are outdated and must NOT be used for actual financial transactions or currency conversions.</div>`;
+  if (cat.type === 'currency') {
+    const badgeText = liveRatesDate ? 'Live rates · ' + liveRatesDate : '';
+    const badgeStyle = liveRatesDate ? '' : 'display:none';
+    extras = `
+      <div class="currency-live-badge" id="currency-live-badge" style="${badgeStyle}">
+        <span class="currency-live-dot"></span>
+        ${escHtml(badgeText || '')}
+      </div>
+      <div class="currency-disclaimer" id="currency-static-note" style="${liveRatesDate ? 'display:none' : ''}">
+        ${renderIcon('warning')} <strong>Loading live rates…</strong> Using static fallback rates temporarily.
+      </div>`;
+  }
 
   let dataModeBtn = '';
   if (cat.type === 'data') {
@@ -1227,13 +1506,25 @@ function buildConverterHTML(cat) {
       <div class="formula-display" id="formula-display">
         ${formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : ''}
       </div>
+      <div class="sci-toggle-row" id="sci-toggle-row">
+        <button class="sci-toggle-btn ${state.sciNotation?'active':''}" id="sci-toggle-btn" title="Toggle scientific notation">
+          ${state.sciNotation ? 'E notation ON' : 'E notation'}
+        </button>
+        <span class="sci-notation-hint" id="sci-notation-hint"></span>
+      </div>
       <div class="action-row">
         <button class="action-btn copy-btn" id="copy-btn" title="Copy result (Enter)">${renderIcon('copy')} Copy</button>
         <button class="action-btn star-btn ${starred?'starred':''}" id="star-btn" title="Save as favorite">
           ${starred ? renderIcon('star') + ' Saved' : renderIcon('star') + ' Favorite'}
         </button>
+        <button class="action-btn share-btn" id="share-btn" title="Share this conversion">${renderIcon('share')} Share</button>
         <button class="action-btn toggle-chip ${state.multiConvert?'active':''}" id="multi-btn" title="Show all units">
           ${renderIcon('table')} ${state.multiConvert ? 'Hide Table' : 'All Units'}
+        </button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="numpad-toggle-btn ${state.numpadVisible?'active':''}" id="numpad-toggle-btn" title="Toggle on-screen numpad">
+          ${renderIcon('numpad')} Numpad
         </button>
       </div>
       ${extras}
@@ -1358,6 +1649,18 @@ function renderHistoryPanel() {
 
 let _debounceTimer = null;
 
+// Returns formatted result string, optionally in scientific notation
+function formatResultDisplay(n) {
+  if (n === null || n === undefined || isNaN(n) || !isFinite(n)) return formatResult(n);
+  const shouldSuggestSci = isFinite(n) && (Math.abs(n) >= 1e6 || (Math.abs(n) < 1e-4 && n !== 0));
+  if (state.sciNotation) {
+    // Format in scientific notation: e.g. 1.23456e+7
+    const exp = n.toExponential(6).replace(/\.?0+e/, 'e');
+    return exp;
+  }
+  return formatResult(n);
+}
+
 function updateResult() {
   const cat = getCat(state.activeCategory);
   if (!cat) return;
@@ -1367,12 +1670,14 @@ function updateResult() {
   const result = (!isNaN(numVal) && state.fromValue !== '')
     ? convertValue(cat.id, state.fromUnit, state.toUnit, numVal, state.dataMode, state.cookingIngredient)
     : null;
-  const resultStr = (result !== null) ? formatResult(result) : '';
+  const resultStr = (result !== null) ? formatResultDisplay(result) : '';
   const formula   = getFormula(cat.id, state.fromUnit, state.toUnit, numVal, result);
 
   const rDisplay  = document.getElementById('result-display');
   const fDisplay  = document.getElementById('formula-display');
   const multiSect = document.querySelector('.multi-convert-section');
+  const sciBtn    = document.getElementById('sci-toggle-btn');
+  const sciHint   = document.getElementById('sci-notation-hint');
 
   if (rDisplay) {
     rDisplay.classList.remove('invalid');
@@ -1381,6 +1686,13 @@ function updateResult() {
   }
   if (fDisplay) {
     fDisplay.innerHTML = formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : '';
+  }
+  // Show sci notation toggle hint when number is very large/small
+  if (sciBtn && result !== null && isFinite(result) && result !== 0) {
+    const shouldSuggest = Math.abs(result) >= 1e6 || Math.abs(result) < 1e-4;
+    sciBtn.classList.toggle('active', !!state.sciNotation);
+    sciBtn.textContent = state.sciNotation ? 'E notation ON' : 'E notation';
+    if (sciHint) sciHint.textContent = shouldSuggest && !state.sciNotation ? '(large number detected)' : '';
   }
   if (multiSect && state.multiConvert) {
     multiSect.innerHTML = buildMultiConvertHTML(cat);
@@ -1530,6 +1842,38 @@ function attachConverterEvents() {
       saveState();
     });
   });
+
+  // Share button
+  const shareBtn = document.getElementById('share-btn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', () => {
+      const url = buildShareURL();
+      history.replaceState(null, '', url);
+      copyToClipboard(url, shareBtn,
+        renderIcon('check') + ' Copied!',
+        renderIcon('share') + ' Share'
+      );
+    });
+  }
+
+  // Scientific notation toggle
+  const sciToggleBtn = document.getElementById('sci-toggle-btn');
+  if (sciToggleBtn) {
+    sciToggleBtn.addEventListener('click', () => {
+      state.sciNotation = !state.sciNotation;
+      saveState();
+      updateResult();
+    });
+  }
+
+  // Numpad toggle button
+  const numpadToggleBtn = document.getElementById('numpad-toggle-btn');
+  if (numpadToggleBtn) {
+    numpadToggleBtn.addEventListener('click', () => {
+      state.numpadVisible = !state.numpadVisible;
+      toggleNumpad(state.numpadVisible);
+    });
+  }
 
   attachMultiEvents();
 }
@@ -1758,17 +2102,441 @@ function escHtml(s) {
 }
 
 // ============================================================
+// LIVE CURRENCY RATES
+// ============================================================
+
+// Holds the date of live rate data once fetched
+let liveRatesDate = null;
+
+async function fetchCurrencyRates() {
+  try {
+    const [ratesRes, namesRes] = await Promise.all([
+      fetch('https://api.frankfurter.app/latest?from=USD'),
+      fetch('https://api.frankfurter.app/currencies')
+    ]);
+    if (!ratesRes.ok || !namesRes.ok) throw new Error('API error');
+    const ratesData = await ratesRes.json();  // { base, date, rates: {EUR:0.9,...} }
+    const namesData = await namesRes.json();  // { EUR:'Euro', GBP:'British Pound', ... }
+
+    // Build new rates with USD=1 as the base, all others from API
+    const newRates = { USD: 1 };
+    for (const [code, rate] of Object.entries(ratesData.rates)) {
+      newRates[code] = rate;
+    }
+
+    // Replace CURRENCY_RATES in-place
+    for (const k in CURRENCY_RATES) delete CURRENCY_RATES[k];
+    Object.assign(CURRENCY_RATES, newRates);
+
+    // Update CURRENCY_NAMES with any new names
+    Object.assign(CURRENCY_NAMES, namesData);
+    if (!CURRENCY_NAMES['USD']) CURRENCY_NAMES['USD'] = 'US Dollar';
+
+    // Rebuild currency category units list (sorted alphabetically)
+    const currCat = getCat('currency');
+    if (currCat) {
+      currCat.units = Object.keys(CURRENCY_RATES).sort().map(k => ({
+        id: k, label: k, name: CURRENCY_NAMES[k] || k
+      }));
+    }
+
+    liveRatesDate = ratesData.date;
+
+    // Re-render if currency tab is active
+    if (state.activeCategory === 'currency') {
+      renderMain();
+    } else {
+      // Update badge if the disclaimer is currently visible
+      const badge = document.getElementById('currency-live-badge');
+      const note  = document.getElementById('currency-static-note');
+      if (badge) { badge.textContent = ''; badge.style.display = ''; }
+      if (note)  note.style.display = 'none';
+    }
+  } catch(e) {
+    console.warn('[ConvertAl] Currency fetch failed, using static fallback rates');
+  }
+}
+
+// ============================================================
+// SHARE URL
+// ============================================================
+
+function buildShareURL() {
+  try {
+    const data = { c: state.activeCategory, f: state.fromUnit, t: state.toUnit, v: state.fromValue };
+    return location.href.split('#')[0] + '#s=' + btoa(JSON.stringify(data));
+  } catch(e) { return location.href; }
+}
+
+function parseShareURL() {
+  try {
+    const hash = location.hash;
+    if (!hash.startsWith('#s=')) return null;
+    return JSON.parse(atob(hash.slice(3)));
+  } catch(e) { return null; }
+}
+
+function applyShareURL(data) {
+  if (!data || !data.c) return false;
+  const cat = getCat(data.c);
+  if (!cat) return false;
+  const units  = getCatUnits(data.c, state.dataMode);
+  const unitIds = units.map(u => u.id);
+  if (!unitIds.includes(data.f) || !unitIds.includes(data.t)) return false;
+  state.activeCategory = data.c;
+  state.fromUnit  = data.f;
+  state.toUnit    = data.t;
+  state.fromValue = String(data.v || '1');
+  return true;
+}
+
+// ============================================================
+// NUMPAD
+// ============================================================
+
+function toggleNumpad(show) {
+  const panel = document.getElementById('numpad-panel');
+  if (!panel) return;
+  panel.classList.toggle('open', !!show);
+  panel.setAttribute('aria-hidden', show ? 'false' : 'true');
+  // Update toggle button appearance
+  const btn = document.getElementById('numpad-toggle-btn');
+  if (btn) btn.classList.toggle('active', !!show);
+}
+
+function handleNumpadKey(key) {
+  // Target: the currently visible from-value input
+  const input = document.getElementById('from-value-input');
+  if (!input) return;
+
+  let val = input.value;
+
+  if (key === 'backspace') {
+    val = val.slice(0, -1);
+  } else if (key === 'clear') {
+    val = '';
+  } else if (key === 'plusminus') {
+    if (val.startsWith('-')) val = val.slice(1);
+    else if (val !== '' && val !== '0') val = '-' + val;
+  } else if (key === 'enter') {
+    copyResult();
+    return;
+  } else if (key === '.') {
+    if (!val.includes('.')) val += '.';
+  } else {
+    // digit
+    if (val === '0' && key !== '.') val = key;
+    else val += key;
+  }
+
+  input.value = val;
+  state.fromValue = val;
+  updateResult();
+}
+
+function attachNumpadEvents() {
+  const closeBtn = document.getElementById('numpad-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      state.numpadVisible = false;
+      toggleNumpad(false);
+    });
+  }
+
+  document.querySelectorAll('#numpad-grid .numpad-key').forEach(btn => {
+    btn.addEventListener('click', () => handleNumpadKey(btn.dataset.key));
+    // Prevent focus stealing from input
+    btn.addEventListener('mousedown', e => e.preventDefault());
+  });
+}
+
+// ============================================================
+// NUMBER BASE CONVERTER
+// ============================================================
+
+const BASE_LABELS = { dec: 'DEC', bin: 'BIN', hex: 'HEX', oct: 'OCT' };
+const BASE_RADIX  = { dec: 10, bin: 2, hex: 16, oct: 8 };
+const BASE_INPUTMODE = { dec: 'decimal', bin: 'numeric', hex: 'text', oct: 'numeric' };
+const BASE_PLACEHOLDER = { dec: 'Decimal  (0–9)', bin: 'Binary  (0–1)', hex: 'Hexadecimal  (0–F)', oct: 'Octal  (0–7)' };
+
+function parseBaseInput(val, base) {
+  const s = (val || '').trim().toUpperCase();
+  if (!s) return null;
+  const n = parseInt(s, BASE_RADIX[base]);
+  return (isNaN(n) || !isFinite(n)) ? null : n;
+}
+
+function buildBaseConverterHTML() {
+  const input     = state.basesInput || '';
+  const activeBase = state.basesInputBase || 'dec';
+  const decVal    = parseBaseInput(input, activeBase);
+
+  const rows = ['dec', 'bin', 'hex', 'oct'].map(b => {
+    const isActive   = b === activeBase;
+    const displayVal = decVal !== null ? decVal.toString(BASE_RADIX[b]).toUpperCase() : '';
+    const copyVal    = escHtml(displayVal);
+
+    if (isActive) {
+      return `<div class="base-row active-base" data-base="${b}">
+        <span class="base-label">${BASE_LABELS[b]}</span>
+        <div class="base-input-wrap">
+          <input type="text" class="base-value-input" id="base-input"
+            value="${escHtml(input)}"
+            inputmode="${BASE_INPUTMODE[b]}"
+            placeholder="${escHtml(BASE_PLACEHOLDER[b])}"
+            autocomplete="off" spellcheck="false"
+            aria-label="${BASE_LABELS[b]} input">
+        </div>
+        <button class="base-copy-btn" data-val="${copyVal}" title="Copy"${!displayVal?' disabled':''}>
+          ${renderIcon('copy')}
+        </button>
+      </div>`;
+    }
+    return `<div class="base-row" data-base="${b}" role="button" tabindex="0"
+        title="Click to use ${BASE_LABELS[b]} as input base">
+      <span class="base-label">${BASE_LABELS[b]}</span>
+      <div class="base-input-wrap">
+        <span class="base-value-display">${displayVal ? escHtml(displayVal) : '<span style=\'opacity:0.35\'>—</span>'}</span>
+      </div>
+      <button class="base-copy-btn" data-val="${copyVal}" title="Copy"${!displayVal?' disabled':''}>
+        ${renderIcon('copy')}
+      </button>
+    </div>`;
+  }).join('');
+
+  return `<div class="converter-card">
+    <div class="card-header">
+      <span class="card-icon">${renderIcon('bases')}</span>
+      <h2 class="card-title">Number Base Converter</h2>
+    </div>
+    <div class="base-rows" id="base-rows">${rows}</div>
+    <div class="formula-display" style="margin-top:14px;font-size:12px">
+      Tap any row to switch the input base &mdash; values update instantly
+    </div>
+  </div>`;
+}
+
+function updateBaseRows() {
+  const input     = state.basesInput || '';
+  const activeBase = state.basesInputBase || 'dec';
+  const decVal    = parseBaseInput(input, activeBase);
+
+  ['dec', 'bin', 'hex', 'oct'].forEach(b => {
+    if (b === activeBase) return;
+    const row = document.querySelector(`.base-row[data-base="${b}"]`);
+    if (!row) return;
+    const disp    = row.querySelector('.base-value-display');
+    const copyBtn = row.querySelector('.base-copy-btn');
+    const val     = decVal !== null ? decVal.toString(BASE_RADIX[b]).toUpperCase() : '';
+    if (disp) disp.innerHTML = val ? escHtml(val) : '<span style="opacity:0.35">—</span>';
+    if (copyBtn) { copyBtn.dataset.val = val; copyBtn.disabled = !val; }
+  });
+}
+
+function attachBaseConverterEvents() {
+  const input = document.getElementById('base-input');
+  if (input) {
+    input.addEventListener('input', e => {
+      state.basesInput = e.target.value;
+      updateBaseRows();
+      saveState();
+    });
+    input.addEventListener('focus', () => input.select());
+    setTimeout(() => input.focus(), 50);
+  }
+
+  document.querySelectorAll('.base-row').forEach(row => {
+    const switchToBase = () => {
+      const base = row.dataset.base;
+      if (!base || base === state.basesInputBase) return;
+      // Convert current value into the new base
+      const decVal = parseBaseInput(state.basesInput, state.basesInputBase);
+      state.basesInputBase = base;
+      state.basesInput     = decVal !== null ? decVal.toString(BASE_RADIX[base]).toUpperCase() : '';
+      renderMain();
+      saveState();
+    };
+    row.addEventListener('click', e => {
+      if (e.target.closest('.base-copy-btn')) return;
+      if (!row.classList.contains('active-base')) switchToBase();
+    });
+    row.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchToBase(); }
+    });
+  });
+
+  document.querySelectorAll('.base-copy-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const val = btn.dataset.val || '';
+      if (val) copyToClipboard(val, btn, renderIcon('check'), renderIcon('copy'));
+    });
+  });
+}
+
+// ============================================================
+// PERCENTAGE CALCULATOR
+// ============================================================
+
+const PERCENT_MODES = [
+  { label: 'X% of Y',            xLbl: 'Percentage (X%)', yLbl: 'Number (Y)',     rLbl: 'Result'       },
+  { label: 'X is what % of Y',   xLbl: 'Value (X)',       yLbl: 'Total (Y)',      rLbl: 'Percentage'   },
+  { label: '% change X → Y',     xLbl: 'Original (X)',    yLbl: 'New value (Y)',  rLbl: '% Change'     },
+  { label: 'Add X% to Y',        xLbl: 'Percentage (X%)', yLbl: 'Number (Y)',     rLbl: 'Result'       },
+  { label: 'Subtract X% from Y', xLbl: 'Percentage (X%)', yLbl: 'Number (Y)',     rLbl: 'Result'       },
+];
+
+function calcPercent(mode, x, y) {
+  if (!isFinite(x) || !isFinite(y)) return null;
+  switch (mode) {
+    case 0: return (x / 100) * y;
+    case 1: return y === 0 ? null : (x / y) * 100;
+    case 2: return x === 0 ? null : ((y - x) / Math.abs(x)) * 100;
+    case 3: return y * (1 + x / 100);
+    case 4: return y * (1 - x / 100);
+    default: return null;
+  }
+}
+
+function getPercentFormula(mode, x, y, result) {
+  const f  = n => (n == null || isNaN(n)) ? '?' : formatResult(n);
+  const r  = result != null && !isNaN(result) ? formatResult(result) : '?';
+  switch (mode) {
+    case 0: return `${f(x)}% × ${f(y)} = ${r}`;
+    case 1: return `(${f(x)} ÷ ${f(y)}) × 100 = ${r}%`;
+    case 2: return `((${f(y)} − ${f(x)}) ÷ |${f(x)}|) × 100 = ${r}%`;
+    case 3: return `${f(y)} × (1 + ${f(x)}÷100) = ${r}`;
+    case 4: return `${f(y)} × (1 − ${f(x)}÷100) = ${r}`;
+    default: return '';
+  }
+}
+
+function buildPercentCalcHTML() {
+  const mode = state.percentMode || 0;
+  const px   = state.percentX || '';
+  const py   = state.percentY || '';
+  const nx   = parseInput(px), ny = parseInput(py);
+  const result    = (!isNaN(nx) && !isNaN(ny)) ? calcPercent(mode, nx, ny) : null;
+  const resultStr = (result !== null && !isNaN(result)) ? formatResult(result) : '';
+  const isPercent = mode === 1 || mode === 2;
+  const m         = PERCENT_MODES[mode];
+  const formula   = (!isNaN(nx) && !isNaN(ny)) ? getPercentFormula(mode, nx, ny, result) : '';
+
+  const modeButtons = PERCENT_MODES.map((pm, i) =>
+    `<button class="percent-mode-btn${i===mode?' active':''}" data-mode="${i}">${escHtml(pm.label)}</button>`
+  ).join('');
+
+  return `<div class="converter-card">
+    <div class="card-header">
+      <span class="card-icon">${renderIcon('percent')}</span>
+      <h2 class="card-title">Percentage Calculator</h2>
+    </div>
+    <div class="percent-modes" id="percent-modes">${modeButtons}</div>
+    <div class="percent-inputs">
+      <div class="percent-input-group">
+        <div class="percent-input-label">${escHtml(m.xLbl)}</div>
+        <input type="text" class="percent-input" id="percent-x"
+          value="${escHtml(px)}" placeholder="0"
+          inputmode="decimal" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="percent-input-group">
+        <div class="percent-input-label">${escHtml(m.yLbl)}</div>
+        <input type="text" class="percent-input" id="percent-y"
+          value="${escHtml(py)}" placeholder="0"
+          inputmode="decimal" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="percent-result-section">
+      <div class="percent-result-label">${escHtml(m.rLbl)}</div>
+      <div class="percent-result" id="percent-result" aria-live="polite">
+        ${resultStr
+          ? escHtml(resultStr) + (isPercent ? '<span class="percent-unit">%</span>' : '')
+          : '<span style="opacity:0.35">—</span>'}
+      </div>
+      <div class="formula-display" id="percent-formula" style="margin-top:12px">
+        ${formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : ''}
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="action-btn copy-btn" id="percent-copy-btn">${renderIcon('copy')} Copy</button>
+    </div>
+  </div>`;
+}
+
+function updatePercentResult() {
+  const mode      = state.percentMode || 0;
+  const nx        = parseInput(state.percentX), ny = parseInput(state.percentY);
+  const result    = (!isNaN(nx) && !isNaN(ny)) ? calcPercent(mode, nx, ny) : null;
+  const resultStr = (result !== null && !isNaN(result)) ? formatResult(result) : '';
+  const isPercent = mode === 1 || mode === 2;
+  const formula   = (!isNaN(nx) && !isNaN(ny)) ? getPercentFormula(mode, nx, ny, result) : '';
+
+  const rDisplay = document.getElementById('percent-result');
+  const fDisplay = document.getElementById('percent-formula');
+  if (rDisplay) {
+    rDisplay.innerHTML = resultStr
+      ? escHtml(resultStr) + (isPercent ? '<span class="percent-unit">%</span>' : '')
+      : '<span style="opacity:0.35">—</span>';
+  }
+  if (fDisplay) {
+    fDisplay.innerHTML = formula ? '<span class="formula-highlight">Formula:</span> ' + escHtml(formula) : '';
+  }
+}
+
+function attachPercentCalcEvents() {
+  const xInput = document.getElementById('percent-x');
+  const yInput = document.getElementById('percent-y');
+  if (xInput) {
+    xInput.addEventListener('input', e => { state.percentX = e.target.value; updatePercentResult(); saveState(); });
+    xInput.addEventListener('focus', () => xInput.select());
+  }
+  if (yInput) {
+    yInput.addEventListener('input', e => { state.percentY = e.target.value; updatePercentResult(); saveState(); });
+    yInput.addEventListener('focus', () => yInput.select());
+  }
+  document.querySelectorAll('.percent-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.percentMode = parseInt(btn.dataset.mode);
+      renderMain();
+      saveState();
+    });
+  });
+  const copyBtn = document.getElementById('percent-copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const rDisplay = document.getElementById('percent-result');
+      if (!rDisplay) return;
+      const text = rDisplay.textContent.trim();
+      if (text && text !== '—') {
+        copyToClipboard(text, copyBtn,
+          renderIcon('check') + ' Copied!',
+          renderIcon('copy') + ' Copy'
+        );
+      }
+    });
+  }
+}
+
+// ============================================================
 // INITIALIZATION
 // ============================================================
 
 function init() {
   // Load persisted state
   loadState();
+
+  // Apply share URL if present (overrides localStorage)
+  const shareData = parseShareURL();
+  if (shareData) applyShareURL(shareData);
+
   applyTheme(state.theme);
 
   // Initial render
   renderTabs();
   renderMain();
+
+  // Start live currency fetch in background (non-blocking)
+  fetchCurrencyRates();
 
   // ---- GLOBAL EVENT DELEGATION for tabs ----
   document.getElementById('tab-bar').addEventListener('click', e => {
@@ -1847,6 +2615,12 @@ function init() {
     const activeTab = document.querySelector('.tab.active');
     if (activeTab) activeTab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
   }, 100);
+
+  // Set up persistent numpad events
+  attachNumpadEvents();
+
+  // Restore numpad visibility if it was open
+  if (state.numpadVisible) toggleNumpad(true);
 }
 
 document.addEventListener('DOMContentLoaded', init);
