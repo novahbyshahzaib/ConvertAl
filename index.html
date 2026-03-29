@@ -1228,6 +1228,7 @@ function saveState() {
     localStorage.setItem('ucp_percentX',       state.percentX || '');
     localStorage.setItem('ucp_percentY',       state.percentY || '');
     localStorage.setItem('ucp_sciNotation',    String(!!state.sciNotation));
+    localStorage.setItem('ucp_numpadVisible', String(!!state.numpadVisible));
   } catch(e) {}
 }
 
@@ -1246,6 +1247,7 @@ function loadState() {
     state.percentX        = localStorage.getItem('ucp_percentX') || '';
     state.percentY        = localStorage.getItem('ucp_percentY') || '';
     state.sciNotation     = localStorage.getItem('ucp_sciNotation') === 'true';
+    state.numpadVisible   = localStorage.getItem('ucp_numpadVisible') === 'true';
 
     const savedFrom = localStorage.getItem('ucp_fromUnit');
     const savedTo   = localStorage.getItem('ucp_toUnit');
@@ -1872,6 +1874,7 @@ function attachConverterEvents() {
     numpadToggleBtn.addEventListener('click', () => {
       state.numpadVisible = !state.numpadVisible;
       toggleNumpad(state.numpadVisible);
+      saveState();
     });
   }
 
@@ -2149,7 +2152,10 @@ async function fetchCurrencyRates() {
       // Update badge if the disclaimer is currently visible
       const badge = document.getElementById('currency-live-badge');
       const note  = document.getElementById('currency-static-note');
-      if (badge) { badge.textContent = ''; badge.style.display = ''; }
+      if (badge) {
+        badge.innerHTML = '<span class="currency-live-dot"></span> Live rates · ' + escHtml(liveRatesDate);
+        badge.style.display = '';
+      }
       if (note)  note.style.display = 'none';
     }
   } catch(e) {
@@ -2240,6 +2246,7 @@ function attachNumpadEvents() {
     closeBtn.addEventListener('click', () => {
       state.numpadVisible = false;
       toggleNumpad(false);
+      saveState();
     });
   }
 
