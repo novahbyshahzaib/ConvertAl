@@ -23,29 +23,41 @@
     :root {
       --bg: #f0f4ff;
       --surface: #ffffff;
-      --surface-hover: #f8faff;
-      --border: #dde3f0;
+      --surface-hover: #eef2ff;
+      --border: #c7d0e8;
       --text: #1e293b;
       --text-muted: #64748b;
       --accent: #6366f1;
       --accent-hover: #4f46e5;
-      --glass: #f5f7ff;
-      --shadow: 0 8px 32px rgba(0,0,0,0.08);
+      --glass: #e8eeff;
+      --key-bg: #dde3f4;
+      --key-bg-hover: #c8d0ea;
+      --key-action-bg: #eef1fb;
+      --panel-bg: #f4f6fe;
+      --shadow: 0 8px 32px rgba(0,0,0,0.10);
+      --key-shadow: 0 2px 6px rgba(99,102,241,0.12);
+      --accent-shadow: 0 3px 10px rgba(99,102,241,0.4);
       --gradient: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 50%, #e8eeff 100%);
       --tr: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       color-scheme: light;
     }
     .dark {
       --bg: #0f0f1a;
-      --surface: rgba(255,255,255,0.05);
-      --surface-hover: rgba(255,255,255,0.08);
-      --border: rgba(255,255,255,0.1);
+      --surface: #1a1a2e;
+      --surface-hover: #222240;
+      --border: #2e2e52;
       --text: #e2e8f0;
-      --text-muted: #94a3b8;
+      --text-muted: #8892a4;
       --accent: #6366f1;
       --accent-hover: #818cf8;
-      --glass: rgba(255,255,255,0.03);
-      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --glass: #141428;
+      --key-bg: #252548;
+      --key-bg-hover: #2e2e58;
+      --key-action-bg: #1e1e3a;
+      --panel-bg: #131325;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --key-shadow: 0 2px 8px rgba(99,102,241,0.3);
+      --accent-shadow: 0 3px 10px rgba(99,102,241,0.35);
       --gradient: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
       color-scheme: dark;
     }
@@ -95,7 +107,7 @@
     .search-icon svg { width: 15px; height: 15px; }
     .search-dropdown {
       position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-      background: var(--surface); backdrop-filter: blur(20px);
+      background: var(--panel-bg); backdrop-filter: blur(20px);
       border: 1px solid var(--border); border-radius: 14px;
       box-shadow: var(--shadow); z-index: 200;
       display: none; max-height: 280px; overflow-y: auto;
@@ -305,8 +317,8 @@
     /* ===== HISTORY PANEL ===== */
     .history-panel {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
-      background: var(--surface); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-      border-top: 1px solid var(--border); border-radius: 20px 20px 0 0;
+      background: var(--panel-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      border-top: 2px solid var(--border); border-radius: 20px 20px 0 0;
       box-shadow: 0 -8px 40px rgba(0,0,0,0.3);
       transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       max-height: 60vh; display: flex; flex-direction: column;
@@ -469,9 +481,9 @@
     /* ===== NUMPAD ===== */
     .numpad-panel {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 310;
-      background: var(--surface); border-top: 1px solid var(--border);
+      background: var(--panel-bg); border-top: 2px solid var(--border);
       border-radius: 20px 20px 0 0; padding: 16px 16px 28px;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
       transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
     }
     .numpad-panel.open { transform: translateY(0); }
@@ -482,7 +494,7 @@
     .numpad-title { font-size: 15px; font-weight: 600; color: var(--text); }
     .numpad-close-btn {
       width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
-      background: transparent; color: var(--text-muted); cursor: pointer;
+      background: var(--surface); color: var(--text-muted); cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: var(--tr);
     }
     .numpad-close-btn:hover { background: var(--surface-hover); color: var(--text); }
@@ -493,23 +505,24 @@
     }
     .numpad-key {
       height: 52px; border-radius: 12px; border: 1px solid var(--border);
-      background: var(--glass); color: var(--text);
-      font-family: inherit; font-size: 20px; font-weight: 500;
-      cursor: pointer; transition: background 0.1s, transform 0.1s;
+      background: var(--key-bg); color: var(--text);
+      font-family: inherit; font-size: 20px; font-weight: 600;
+      cursor: pointer; transition: background 0.1s, transform 0.1s, box-shadow 0.1s;
       display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent; user-select: none;
+      box-shadow: var(--key-shadow);
     }
-    .numpad-key:hover { background: var(--surface-hover); }
-    .numpad-key:active { transform: scale(0.93); background: var(--border); }
+    .numpad-key:hover { background: var(--key-bg-hover); }
+    .numpad-key:active { transform: scale(0.93); box-shadow: none; }
     .numpad-key svg { width: 18px; height: 18px; }
     .numpad-key-action {
-      background: var(--surface); font-size: 14px; font-weight: 600;
-      color: var(--text-muted);
+      background: var(--key-action-bg); font-size: 14px; font-weight: 700;
+      color: var(--text-muted); border-color: var(--border);
     }
-    .numpad-key-action:hover { color: var(--text); }
+    .numpad-key-action:hover { background: var(--surface-hover); color: var(--text); }
     .numpad-key-accent {
       background: var(--accent); color: white; border-color: var(--accent);
-      font-size: 13px;
+      font-size: 13px; box-shadow: var(--accent-shadow);
     }
     .numpad-key-accent:hover { background: var(--accent-hover); }
     .numpad-key-zero { grid-column: span 2; }
