@@ -2,7 +2,7 @@
   "name": "ConvertAl",
   "short_name": "ConvertAl",
   "description": "Convert between 20+ categories — unit converter, scientific calculator, BMI, tip, loan, color & more",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

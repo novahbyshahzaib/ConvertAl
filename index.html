@@ -769,9 +769,90 @@
       .calc-keypad { gap: 5px; }
       .calc-btn { height: 44px; font-size: 14px; }
     }
+
+    /* ===== PWA INSTALL BANNER ===== */
+    #pwa-install-banner {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px 20px;
+      max-width: 360px;
+      width: calc(100% - 40px);
+      display: none;
+      align-items: center;
+      gap: 14px;
+    }
+    #pwa-install-banner.visible {
+      display: flex;
+    }
+    #pwa-install-banner img {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    #pwa-install-banner .pwa-banner-text {
+      flex: 1;
+    }
+    #pwa-install-banner .pwa-banner-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    #pwa-install-banner .pwa-banner-text span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    #pwa-install-banner .pwa-banner-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #pwa-install-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #pwa-install-btn:hover { background: var(--accent-hover); }
+    #pwa-dismiss-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    #pwa-dismiss-btn:hover { color: var(--text); }
   </style>
 </head>
 <body>
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" role="dialog" aria-label="Install ConvertAl">
+  <img src="icon-192.png" alt="ConvertAl icon">
+  <div class="pwa-banner-text">
+    <strong>Install ConvertAl</strong>
+    <span>Add to home screen for quick access</span>
+  </div>
+  <div class="pwa-banner-actions">
+    <button id="pwa-install-btn">Install</button>
+    <button id="pwa-dismiss-btn">✕</button>
+  </div>
+</div>
 <div id="app">
 
   <!-- HEADER -->
@@ -3657,6 +3738,48 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ============================================================
+// PWA INSTALL PROMPT
+// ============================================================
+(function () {
+  const DISMISS_KEY = 'pwa-install-dismissed';
+  let deferredPrompt = null;
+  const banner = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  function showBanner() {
+    if (!sessionStorage.getItem(DISMISS_KEY)) {
+      banner.classList.add('visible');
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showBanner();
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    banner.classList.remove('visible');
+    if (outcome === 'accepted') sessionStorage.setItem(DISMISS_KEY, '1');
+  });
+
+  dismissBtn.addEventListener('click', () => {
+    banner.classList.remove('visible');
+    sessionStorage.setItem(DISMISS_KEY, '1');
+  });
+
+  // Hide banner if already installed (standalone mode)
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    sessionStorage.setItem(DISMISS_KEY, '1');
+  }
+})();
 
 // ============================================================
 // SERVICE WORKER REGISTRATION (PWA)
